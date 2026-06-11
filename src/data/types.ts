@@ -176,6 +176,27 @@ export type CaseProgress = {
   deductionAnswers: Record<string, string[]>;
   actionPointsSpent: number;
   initialHypothesisId: string;
+  /** 证据簿分类：玩家对每条已发现证据的主观归类（不参与评分） */
+  evidenceNotes: Record<string, '事实' | '矛盾' | '推论' | ''>;
 };
 
 export type ProgressStore = Record<string, CaseProgress>;
+
+/**
+ * 中间推理链（内容设计用，不参与 UI 计算）
+ *
+ * 目的：强制内容设计时明确"哪几条证据组合才能推出哪个中间结论"，
+ * 避免单条证据直达最终结论。
+ *
+ * 使用方法：在案件数据文件中声明 inferenceLinks 数组，作为设计注释，
+ * 不需要导出到 caseExtensions，也不影响现有评分逻辑。
+ */
+export type InferenceLink = {
+  id: string;
+  /** 需要组合的证据 id 列表（2-3 条） */
+  evidenceIds: string[];
+  /** 这些证据组合后能推出的中间结论 */
+  conclusion: string;
+  /** 用相同证据可能误推出的错误结论（可选，用于复盘拆解） */
+  decoyConclusion?: string;
+};

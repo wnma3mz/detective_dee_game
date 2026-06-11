@@ -18,6 +18,7 @@ export function createEmptyProgress(gameCase: DetectiveCase): CaseProgress {
     deductionAnswers: {},
     actionPointsSpent: 0,
     initialHypothesisId: '',
+    evidenceNotes: {},
   };
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ScrollText,
@@ -56,6 +56,7 @@ function getProgress(progressStore: ProgressStore, gameCase: DetectiveCase): Cas
     deductionAnswers: savedProgress.deductionAnswers ?? {},
     actionPointsSpent: savedProgress.actionPointsSpent ?? 0,
     initialHypothesisId: savedProgress.initialHypothesisId ?? '',
+    evidenceNotes: savedProgress.evidenceNotes ?? {},
   };
 }
 
@@ -88,10 +89,12 @@ function NewInvestigationPanel({
   gameCase,
   progress,
   onUnlockNode,
+  onNoteEvidence,
 }: {
   gameCase: DetectiveCase;
   progress: CaseProgress;
   onUnlockNode: (nodeId: string) => void;
+  onNoteEvidence: (evidenceId: string, note: '事实' | '矛盾' | '推论' | '') => void;
 }) {
   const nodes = gameCase.investigationNodes!;
   const limit = gameCase.actionPointLimit;
@@ -158,13 +161,61 @@ function NewInvestigationPanel({
                 </button>
               ) : (
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
-                  行动点不足
+                  行动点不足（此处需 {node.cost} 点，当前剩余 {remaining} 点）
                 </p>
               )}
             </div>
           );
         })}
       </div>
+
+      {/* 证据簿：已发现证据分类 */}
+      {gameCase.evidenceList && (() => {
+        const unlockedEvidenceIds = new Set<string>();
+        for (const node of gameCase.investigationNodes ?? []) {
+          if (progress.unlockedNodeIds.includes(node.id)) {
+            for (const eid of node.evidenceIds ?? []) unlockedEvidenceIds.add(eid);
+          }
+        }
+        const discovered = gameCase.evidenceList.filter((e) => unlockedEvidenceIds.has(e.id));
+        if (discovered.length === 0) return null;
+        const NOTE_LABELS: ('事实' | '矛盾' | '推论')[] = ['事实', '矛盾', '推论'];
+        return (
+          <div className="evidence-notebook">
+            <h4 className="evidence-notebook-title">证据簿 · 已发现线索</h4>
+            <div className="evidence-notebook-hint-row">
+              <span className="evidence-notebook-hint">归类不影响评分，仅供断案时整理思路，结案后可在复盘中查看归类质量。</span>
+            </div>
+            <div className="evidence-notebook-legend">
+              <span><b>事实</b> 客观存在的线索</span>
+              <span><b>矛盾</b> 与其他线索相悖</span>
+              <span><b>推论</b> 你认为支撑结论的关键</span>
+            </div>
+            {discovered.map((ev) => {
+              const current = progress.evidenceNotes[ev.id] ?? '';
+              return (
+                <div key={ev.id} className="notebook-entry">
+                  <div className="notebook-entry-info">
+                    <span className="notebook-entry-title">{ev.title}</span>
+                    <span className="notebook-entry-content">{ev.content}</span>
+                  </div>
+                  <div className="notebook-entry-tags">
+                    {NOTE_LABELS.map((label) => (
+                      <button
+                        key={label}
+                        className={`note-tag ${current === label ? 'active' : ''}`}
+                        onClick={() => onNoteEvidence(ev.id, current === label ? '' : label)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -412,6 +463,46 @@ function NewReviewPanel({
         </p>
       </div>
 
+      {/* 证据簿归类质量复盘 */}
+      {(() => {
+        const notes = progress.evidenceNotes ?? {};
+        const noted = Object.entries(notes).filter(([, v]) => v !== '');
+        if (noted.length === 0) return null;
+        const decoyTaggedCore = noted.filter(([eid, v]) => {
+          const ev = evidenceMap.get(eid);
+          return ev?.role === 'decoy' && v === '推论';
+        });
+        return (
+          <div className="notebook-review">
+            <h4 style={{ marginTop: '1.5rem', marginBottom: '0.75rem', color: 'var(--text-dark)' }}>证据簿归类复盘</h4>
+            <div className="notebook-review-list">
+              {noted.map(([eid, tag]) => {
+                const ev = evidenceMap.get(eid);
+                if (!ev) return null;
+                const isDecoy = ev.role === 'decoy';
+                const isKeyMistagged = isDecoy && tag === '推论';
+                return (
+                  <div key={eid} className={`notebook-review-entry ${isKeyMistagged ? 'mistagged' : ''}`}>
+                    <span className="notebook-review-ev">{ev.title}</span>
+                    <span className={`notebook-review-tag ${isKeyMistagged ? 'mistagged' : ''}`}>{tag}</span>
+                    {isKeyMistagged && (
+                      <span className="notebook-review-warn">
+                        此线索实为误导：「{ev.content}」——表面合理，但不足以支撑真正的结论，被归为推论核心会引发偏差。
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {decoyTaggedCore.length > 0 && (
+              <p className="notebook-review-summary">
+                你将 {decoyTaggedCore.length} 条误导证据列为推论核心，这可能是你结论偏差的源头。
+              </p>
+            )}
+          </div>
+        );
+      })()}
+
       {/* 阅卷初判复盘 */}
       {gameCase.initialHypotheses && progress.initialHypothesisId && (() => {
         const chosen = gameCase.initialHypotheses!.find((h) => h.id === progress.initialHypothesisId);
@@ -444,6 +535,10 @@ export function App() {
   const [progressStore, setProgressStore] = useState<ProgressStore>(() => loadProgress());
   const [activeTab, setActiveTab] = useState<'reading' | 'investigation' | 'deduction'>('reading');
 
+  const investigationPanelRef = useRef<HTMLElement>(null);
+  const deductionPanelRef = useRef<HTMLElement>(null);
+  const reviewPanelRef = useRef<HTMLElement>(null);
+
   const selectedCase = useMemo(
     () => cases.find((c) => c.id === selectedCaseId) ?? cases[0],
     [selectedCaseId],
@@ -458,6 +553,22 @@ export function App() {
   useEffect(() => {
     setActiveTab('reading');
   }, [selectedCaseId]);
+
+  // 阶段切换后滚动到对应面板（延迟等 framer-motion 动画展开）
+  useEffect(() => {
+    if (activeTab === 'investigation') {
+      const timer = setTimeout(() => {
+        investigationPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+    if (activeTab === 'deduction') {
+      const timer = setTimeout(() => {
+        deductionPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab]);
 
   function updateCaseProgress(caseId: string, updater: (progress: CaseProgress) => CaseProgress) {
     const gameCase = cases.find((item) => item.id === caseId);
@@ -518,6 +629,14 @@ export function App() {
     }));
   }
 
+  function setEvidenceNote(evidenceId: string, note: '事实' | '矛盾' | '推论' | '') {
+    if (!selectedCase) return;
+    updateCaseProgress(selectedCase.id, (progress) => ({
+      ...progress,
+      evidenceNotes: { ...progress.evidenceNotes, [evidenceId]: note },
+    }));
+  }
+
   function useHint(kind: 'light' | 'strong') {
     if (!selectedCase) return;
     updateCaseProgress(selectedCase.id, (progress) => ({
@@ -535,7 +654,10 @@ export function App() {
       submitted: true,
       score: calculateScore(selectedCase, progress),
     }));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 提交后滚到复盘面板而非页面顶部
+    setTimeout(() => {
+      reviewPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
   }
 
   function restartCase() {
@@ -564,6 +686,25 @@ export function App() {
         (step) => (selectedProgress.deductionAnswers[step.id] ?? []).length > 0,
       ) && selectedProgress.selectedEvidenceIds.length >= 2
     : Boolean(selectedProgress.selectedTruthId) && selectedProgress.selectedEvidenceIds.length >= 2;
+
+  // 提交阻断原因（仅在未提交且不可提交时显示）
+  const submitBlockReasons: string[] = [];
+  if (!selectedProgress.submitted && !canSubmit) {
+    if (selectedCase.deductionSteps) {
+      const unansweredNums = selectedCase.deductionSteps
+        .map((step, idx) => ({ idx, step }))
+        .filter(({ step }) => (selectedProgress.deductionAnswers[step.id] ?? []).length === 0)
+        .map(({ idx }) => idx + 1);
+      if (unansweredNums.length > 0) {
+        submitBlockReasons.push(`还有 ${unansweredNums.length} 道推理题未作答（第 ${unansweredNums.join('、')} 题）`);
+      }
+    } else {
+      if (!selectedProgress.selectedTruthId) submitBlockReasons.push('尚未选择案件结论');
+    }
+    if (selectedProgress.selectedEvidenceIds.length < 2) {
+      submitBlockReasons.push(`至少需勾选 2 条证据（当前已选 ${selectedProgress.selectedEvidenceIds.length} 条）`);
+    }
+  }
 
   const selectedTruthLabel =
     selectedCase.deduction.truthOptions.find((opt) => opt.id === selectedProgress.selectedTruthId)?.label ??
@@ -735,7 +876,7 @@ export function App() {
                     )}
 
                     <div className="stage-footer">
-                      <button onClick={() => { setActiveTab('investigation'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+                      <button onClick={() => setActiveTab('investigation')}>
                         前往勘查 <ChevronRight size={18} />
                       </button>
                     </div>
@@ -753,7 +894,7 @@ export function App() {
                   transition={{ duration: 0.3 }}
                   style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
                 >
-                  <section className="panel">
+                  <section className="panel" ref={investigationPanelRef}>
                     <h3 className="panel-title"><Search size={20} /> 现场勘查</h3>
                     <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
                       任务：{selectedCase.playerTask}
@@ -764,6 +905,7 @@ export function App() {
                         gameCase={selectedCase}
                         progress={selectedProgress}
                         onUnlockNode={unlockNode}
+                        onNoteEvidence={setEvidenceNote}
                       />
                     ) : (
                       <div className="actions-grid">
@@ -823,7 +965,7 @@ export function App() {
                     </div>
 
                     <div className="stage-footer">
-                      <button onClick={() => { setActiveTab('deduction'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+                      <button onClick={() => setActiveTab('deduction')}>
                         开始断案 <ChevronRight size={18} />
                       </button>
                     </div>
@@ -841,7 +983,7 @@ export function App() {
                   transition={{ duration: 0.3 }}
                   style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
                 >
-                  <section className="panel">
+                  <section className="panel" ref={deductionPanelRef}>
                     <h3 className="panel-title"><FileQuestion size={20} /> 结案呈词</h3>
 
                     {selectedCase.deductionSteps ? (
@@ -937,23 +1079,33 @@ export function App() {
                     )}
 
                     {!selectedProgress.submitted && (
-                      <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                        <button
-                          onClick={submitCase}
-                          disabled={selectedProgress.submitted || !canSubmit}
-                          style={{ fontSize: '1.1rem', padding: '0.8rem 2rem' }}
-                        >
-                          <Scale size={20} /> 确认结案
-                        </button>
-                        <button className="ghost-button" onClick={restartCase}>
-                          <RotateCcw size={18} /> 重置本案
-                        </button>
+                      <div style={{ marginTop: '1.5rem' }}>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                          <button
+                            onClick={submitCase}
+                            disabled={selectedProgress.submitted || !canSubmit}
+                            style={{ fontSize: '1.1rem', padding: '0.8rem 2rem' }}
+                          >
+                            <Scale size={20} /> 确认结案
+                          </button>
+                          <button className="ghost-button" onClick={restartCase}>
+                            <RotateCcw size={18} /> 重置本案
+                          </button>
+                        </div>
+                        {submitBlockReasons.length > 0 && (
+                          <ul className="submit-block-reasons">
+                            {submitBlockReasons.map((reason) => (
+                              <li key={reason}>{reason}</li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
                     )}
                   </section>
 
                   {selectedProgress.submitted && (
                     <motion.section
+                      ref={reviewPanelRef}
                       variants={panelVariants}
                       initial="hidden"
                       animate="show"

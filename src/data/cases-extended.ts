@@ -1,6 +1,11 @@
 /**
- * 三案样板扩展数据
+ * 8 案精制版扩展数据
  * 包含新的调查节点、证据模型、结构化推理步骤和复盘反馈。
+ *
+ * 内容规范：
+ * - investigationNode.result 只写客观事实，禁用"说明""证明""即栽赃""真正目标"等结论性词语
+ * - deductionStep.option.label 只写中性短标签，理由放到 feedback.optionFeedback
+ * - 每案至少有一条红鲱鱼链（见各案顶部注释）
  */
 import type {
   CaseFeedback,
@@ -11,6 +16,16 @@ import type {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 01 梁上白绫
+//
+// ── 红鲱鱼链：赵氏自尽 ────────────────────────────────────────────────────────
+// 错误结论：赵氏情绪低落，自行上吊
+// 支持它的表面证据：
+//   - 旧白绫（id: old-rope）——家中常备旧物，取材方便，符合自尽预谋
+//   - 板凳倒地（场景）——符合蹬翻板凳的自尽动作
+// 解释不了的关键矛盾：
+//   - 双脚与板凳相距过远（id: feet-distance）——距离使"蹬翻板凳"动作在物理上无法完成
+// 复盘拆解：旧白绫和倒地板凳让人第一时间相信表面说法；
+//   但双脚与板凳的具体距离排除了"蹬翻"这一必要动作，自尽链在物理上断了。
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const evidenceList01: Evidence[] = [
@@ -78,7 +93,7 @@ export const investigationNodes01: InvestigationNode[] = [
     id: 'scene-hoe',
     type: 'scene',
     title: '查看墙角锄头',
-    result: '锄头立得端正，锄尖上还有湿泥。田间劳作后随手一放，不会这么整齐。',
+    result: '锄头立在墙角，柄端朝内，锄尖上有湿泥未干。周围地面无拖拽或跌落痕迹。',
     cost: 1,
     evidenceIds: ['hoe-neat'],
     unlocks: ['witness-zhou-hoe'],
@@ -160,11 +175,11 @@ export const deductionSteps01: DeductionStep[] = [
     prompt: '哪些线索共同支持"现场被人布置过"这个推论？（可多选）',
     type: 'multi',
     options: [
-      { id: 'torn-clothes', label: '衣襟新破——死前曾有扭打' },
-      { id: 'neck-scratch', label: '周二脖颈抓痕——与赵氏挣扎可互相印证' },
-      { id: 'hoe-neat', label: '锄头立得端正——说明有人从容整理过现场' },
-      { id: 'old-rope', label: '白绫是旧物——家中常备，可事先备好' },
-      { id: 'suspect-speech', label: '周二口供前后矛盾——"吓坏了"却还整理了锄头' },
+      { id: 'torn-clothes', label: '衣襟新破' },
+      { id: 'neck-scratch', label: '周二脖颈抓痕' },
+      { id: 'hoe-neat', label: '锄头立得端正' },
+      { id: 'old-rope', label: '白绫是旧物' },
+      { id: 'suspect-speech', label: '周二口供前后矛盾' },
     ],
     correctOptionIds: ['torn-clothes', 'neck-scratch', 'hoe-neat', 'suspect-speech'],
     maxScore: 3,
@@ -219,6 +234,16 @@ export const feedback01: CaseFeedback = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 02 假使团为何进京
+//
+// ── 红鲱鱼链：冒领赏赐 ────────────────────────────────────────────────────────
+// 错误结论：假使团进京是为了冒领贡礼赏赐
+// 支持它的表面证据：
+//   - 使团携带的贡礼（id: diplomatic-gift）——贡礼丰厚，财物动机成立
+//   - 假使团成功入京受赏（场景事实）——说明他们拿到了赏赐
+// 解释不了的关键矛盾：
+//   - 留下活口继续冒险（id: survivor-risk）——为了财物不该故意留活口，反而扩大暴露风险
+// 复盘拆解：贡礼丰厚+入京受赏让赏赐说非常合理；
+//   但留活口、进京后继续行动这些反常行为都无法被"已拿到赏赐"解释，说明目标不在赏赐。
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const evidenceList02: Evidence[] = [
@@ -298,7 +323,7 @@ export const investigationNodes02: InvestigationNode[] = [
     id: 'motive-war',
     type: 'witness',
     title: '核查"挑起战火"说',
-    result: '若要挑起战火，只需杀死使团、栽赃边境即可。凶手假冒进京这一步对"挑战火"毫无必要，反而增加暴露风险。',
+    result: '挑起边境冲突通常只需在边境制造流血事件，如杀死使团并栽赃对方。假使团此后却假冒身份继续进京，此举的风险远高于单纯的边境挑衅。',
     cost: 1,
     evidenceIds: ['war-enough'],
   },
@@ -306,7 +331,7 @@ export const investigationNodes02: InvestigationNode[] = [
     id: 'motive-reward',
     type: 'witness',
     title: '核查"冒领赏赐"说',
-    result: '冒领赏赐目标是使团贡品。但凶手进京后仍继续行动，并未在拿到赏赐后脱身，说明这不是终点。',
+    result: '使团贡品确实丰厚，冒领赏赐在财物层面说得通。凶手进京后拿到了赏赐，但随后并未脱身，反而继续在京城活动，行动范围也超出了接待礼仪的正常流程。',
     cost: 1,
     evidenceIds: ['survivor-risk', 'diplomatic-gift'],
     unlocks: ['motive-reward-detail'],
@@ -316,7 +341,7 @@ export const investigationNodes02: InvestigationNode[] = [
     type: 'witness',
     title: '追问"冒领赏赐"的漏洞',
     prompt: '赏赐固然重要，但为何要留活口、继续冒险？',
-    result: '凶手留下使团中一名向导作为活口，而不是灭口。这个向导熟悉旧窑场附近地形——这才是留他的理由。',
+    result: '凶手对使团成员逐一清点，唯独留下一名向导活命。这名向导的特别之处在于：他在使团职务中负责旧窑场附近地段的引路，对那一带地形极为熟悉。',
     cost: 1,
     requires: ['motive-reward'],
     evidenceIds: ['survivor-risk'],
@@ -334,24 +359,24 @@ export const investigationNodes02: InvestigationNode[] = [
 export const deductionSteps02: DeductionStep[] = [
   {
     id: 'step-surface',
-    prompt: '朝堂上对凶手动机有三种说法，哪一种最站不住脚？',
+    prompt: '朝堂上对凶手动机有三种说法，哪一种能解释最多行为？',
     type: 'single',
     options: [
-      { id: 'war', label: '挑起战火——杀使团已足够，无需冒充进京' },
-      { id: 'reward', label: '冒领赏赐——能解释进京，但不能解释留活口和继续冒险' },
-      { id: 'infiltrate', label: '潜入京城另有图谋——最能解释全部行为' },
+      { id: 'war', label: '挑起边境战乱' },
+      { id: 'reward', label: '冒领赏赐贡礼' },
+      { id: 'infiltrate', label: '借身份潜入京城' },
     ],
-    correctOptionIds: ['war'],
+    correctOptionIds: ['infiltrate'],
     maxScore: 2,
   },
   {
     id: 'step-contradiction',
-    prompt: '"冒领赏赐"说法的核心漏洞是什么？',
+    prompt: '以下哪一点最能排除"冒领赏赐"作为主要动机？',
     type: 'single',
     options: [
-      { id: 'gift-small', label: '贡礼价值太低，不值得这么大费周章' },
-      { id: 'survivor-risk', label: '为赏赐不该故意留活口，反而扩大风险' },
-      { id: 'no-escape-3', label: '凶手已入京却没有立刻逃走' },
+      { id: 'gift-small', label: '贡礼折算价值不高' },
+      { id: 'survivor-risk', label: '故意留活口反而扩大暴露风险' },
+      { id: 'no-escape-3', label: '已入京却未立刻脱身' },
     ],
     correctOptionIds: ['survivor-risk'],
     requiredEvidenceIds: ['survivor-risk'],
@@ -359,13 +384,13 @@ export const deductionSteps02: DeductionStep[] = [
   },
   {
     id: 'step-evidence',
-    prompt: '哪些线索支持"真正目标是旧窑场"这个推论？（可多选）',
+    prompt: '哪些线索支持"假使团在京城另有目标"这个推论？（可多选）',
     type: 'multi',
     options: [
-      { id: 'kiln-guard', label: '旧窑场由禁军看守，有特殊价值' },
+      { id: 'kiln-guard', label: '旧窑场由禁军看守' },
       { id: 'handkerchief', label: '刺客手帕出现在窑场废墟' },
-      { id: 'timeline-match', label: '假使团进京次日，窑场即起火' },
-      { id: 'diplomatic-gift', label: '使团贡礼丰厚，值得冒充' },
+      { id: 'timeline-match', label: '进京次日窑场即起火' },
+      { id: 'diplomatic-gift', label: '使团贡礼丰厚' },
     ],
     correctOptionIds: ['kiln-guard', 'handkerchief', 'timeline-match'],
     maxScore: 3,
@@ -375,9 +400,9 @@ export const deductionSteps02: DeductionStep[] = [
     prompt: '本案最合理的结论是？',
     type: 'single',
     options: [
-      { id: 'truth', label: '凶手借使团身份潜入京城，真正目标是旧窑场' },
-      { id: 'decoy-1', label: '凶手主要目的是挑起边境战火，进京只是顺便' },
-      { id: 'decoy-2', label: '凶手主要目的是冒领赏赐，窑场起火是巧合' },
+      { id: 'truth', label: '借身份入京，目标是旧窑场' },
+      { id: 'decoy-1', label: '以挑起战乱为主，进京只是顺势' },
+      { id: 'decoy-2', label: '以冒领赏赐为主，窑场属意外' },
     ],
     correctOptionIds: ['truth'],
     requiredEvidenceIds: ['kiln-guard', 'handkerchief'],
@@ -387,9 +412,9 @@ export const deductionSteps02: DeductionStep[] = [
 
 export const feedback02: CaseFeedback = {
   optionFeedback: {
-    war: '正确。挑起战火不需要冒充进京，杀使团就已经达成目的。',
-    reward: '冒领赏赐能解释进京，但解释不了留活口和后续的高风险行动。',
-    infiltrate: '正确，这是最终结论。',
+    war: '挑起战乱只需杀使团、制造边境冲突即可，假冒身份进京这一步对战乱目标没有任何帮助，反而增加暴露风险。',
+    reward: '冒领赏赐能解释进京，也能解释使团身份。但进京后继续行动、故意留活口这些行为都无法被"已拿到赏赐"解释。',
+    infiltrate: '正确。借使团身份进京是唯一能同时解释进京行为、留活口、窑场行动三件事的动机。',
     'gift-small': '贡礼价值是否够高是主观判断，不如"留活口却继续冒险"这个逻辑矛盾更直接。',
     'survivor-risk': '正确。为了钱不该这样冒险，说明目的不在赏赐。',
     'no-escape-3': '不逃走有多种解释（还有后续任务、出城被封），不如"留活口"矛盾更尖锐。',
@@ -420,6 +445,17 @@ export const feedback02: CaseFeedback = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 09 低垂的双手
+//
+// ── 红鲱鱼链：孙喜旺直接行凶 ────────────────────────────────────────────────
+// 错误结论：孙喜旺是左撇子，左手血印铁证其罪，直接定案
+// 支持它的表面证据：
+//   - 孙喜旺是左撇子（id: left-handed）——与外圈左手血印高度吻合
+//   - 孙喜旺在场（场景）——案发时他就在院子里
+// 解释不了的关键矛盾：
+//   - 严氏双手低垂（id: hands-low）——正面遇刺时没有防御反应，说明遇刺时处于黑暗中
+// 复盘拆解：左手血印+左撇子让指控看起来铁证如山；
+//   但严氏没有防御反应这一点说明她看不见攻击，配合风灯不可能自然熄灭，
+//   推出黑暗是预谋制造的，真凶需要把孙喜旺的手按在剪刀上才能形成外圈血印。
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const evidenceList09: Evidence[] = [
@@ -508,7 +544,7 @@ export const investigationNodes09: InvestigationNode[] = [
     type: 'knowledge',
     title: '分析严氏为何没有防御动作',
     prompt: '正面遇刺时，正常人为什么会本能抬手？',
-    result: '人在光线正常的情况下遇到正面攻击，本能反应是抬手格挡。严氏双手低垂，说明她在遇刺时根本没有看见攻击——很可能是在黑暗中。',
+    result: '人在光线正常的情况下遇到正面攻击，本能反应是抬手格挡。严氏双手低垂、无防御伤，有两种可能：其一，她没有意识到危险（如从背后或在黑暗中遇袭）；其二，攻击速度极快以至来不及反应。两者需要结合风灯线索进一步判断。',
     cost: 1,
     requires: ['scene-body'],
     evidenceIds: ['hands-low'],
@@ -518,7 +554,7 @@ export const investigationNodes09: InvestigationNode[] = [
     type: 'knowledge',
     title: '分析血印位置的含义',
     prompt: '外圈握法无法有效发力，那血印是什么时候留下的？',
-    result: '血印极可能不是行凶时自然形成的，而是事后由他人将孙喜旺的手按在剪刀上留下的——即栽赃。',
+    result: '外圈握法极难对刺杀发力，若是主动行凶，血印应在握柄或内圈位置自然形成。外圈血印边缘完整，像一次集中按压留下的，而非握持发力时逐渐渗出的。',
     cost: 1,
     requires: ['scene-scissors'],
     evidenceIds: ['blood-outer', 'scissors-grip'],
@@ -528,7 +564,7 @@ export const investigationNodes09: InvestigationNode[] = [
     type: 'knowledge',
     title: '分析灯为何在案发时熄灭',
     prompt: '风灯不可能自然熄灭，那是谁把它弄灭的，目的是什么？',
-    result: '灯在案发时熄灭，说明有人主动制造了黑暗。在黑暗中，严氏无法看见攻击，孙喜旺也可能在不知情的情况下被控制。',
+    result: '气死风的设计就是为了在有风的环境中保持燃烧。此灯位置远离门窗，灯罩完整，无风、无油尽的情形下灯自行熄灭只有两种情况：灯芯被浸水，或被人从外部遮盖。案发前屋内有人，案发时灯突然熄灭。',
     cost: 1,
     requires: ['scene-lamp'],
     evidenceIds: ['lamp-proof'],
@@ -566,11 +602,11 @@ export const deductionSteps09: DeductionStep[] = [
     prompt: '哪些线索共同支持"孙喜旺可能被栽赃"这个推论？（可多选）',
     type: 'multi',
     options: [
-      { id: 'hands-low', label: '严氏双手低垂，说明遇刺前处于黑暗中' },
-      { id: 'lamp-proof', label: '风灯不可能自然熄灭，黑暗是人为制造' },
+      { id: 'hands-low', label: '严氏双手低垂无防御伤' },
+      { id: 'lamp-proof', label: '风灯不可能自然熄灭' },
       { id: 'scissors-grip', label: '外圈握法无法有效发力' },
-      { id: 'blood-outer', label: '血印在外圈，不是自然行凶时的握持位置' },
-      { id: 'left-handed', label: '孙喜旺是左撇子，与血印手型吻合' },
+      { id: 'blood-outer', label: '血印在外圈位置' },
+      { id: 'left-handed', label: '孙喜旺是左撇子' },
     ],
     correctOptionIds: ['hands-low', 'lamp-proof', 'scissors-grip', 'blood-outer'],
     maxScore: 3,
@@ -580,9 +616,9 @@ export const deductionSteps09: DeductionStep[] = [
     prompt: '本案最合理的判断是？',
     type: 'single',
     options: [
-      { id: 'truth', label: '孙喜旺可能被真凶控制利用，血手印是栽赃的一部分' },
-      { id: 'decoy-1', label: '孙喜旺确是凶手，血印和握法只是他操作不熟练' },
-      { id: 'decoy-2', label: '另有外人潜入行凶，孙喜旺和物证都是巧合' },
+      { id: 'truth', label: '孙喜旺被嫁祸，真凶另有其人' },
+      { id: 'decoy-1', label: '孙喜旺直接行凶，握法和血印是操作问题' },
+      { id: 'decoy-2', label: '外人潜入，孙喜旺和物证均属巧合' },
     ],
     correctOptionIds: ['truth'],
     requiredEvidenceIds: ['hands-low', 'lamp-proof', 'blood-outer'],
@@ -624,6 +660,16 @@ export const feedback09: CaseFeedback = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 04 闭城后的车辙
+//
+// ── 红鲱鱼链：日间杀案 ────────────────────────────────────────────────────────
+// 错误结论：案发在日间，伤口新旧说明昨日作案
+// 支持它的表面证据：
+//   - 尸身伤口较新（id: fresh-wound）——"不超过一夜"可被理解为日间也行
+//   - 官道日间繁忙（背景）——凶手可趁混乱作案
+// 解释不了的关键矛盾：
+//   - 死者车辙最新且案发后无新车覆盖（id: rut-on-top + no-new-rut）——日间繁忙则车辙早被覆盖，无法保留到发现时仍最清晰
+// 复盘拆解：伤口新旧让人先想到"昨天"，日间混乱也是合理作案时机；
+//   但官道白日车来车往，死者车辙不可能在日间保持"最新最清晰"不被覆盖，这条链在物证上断了。
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const evidenceList04: Evidence[] = [
@@ -762,10 +808,10 @@ export const deductionSteps04: DeductionStep[] = [
     prompt: '推断案发时间的关键逻辑链是什么？',
     type: 'multi',
     options: [
-      { id: 'rut-newer', label: '死者车辙最新，压旧辙' },
-      { id: 'no-cover', label: '之后无新车辙覆盖，路面无人经过' },
-      { id: 'day-busy', label: '官道白日繁忙，车辙不可能长时间不被覆盖' },
-      { id: 'wound-age', label: '伤口新旧程度' },
+      { id: 'rut-newer', label: '死者车辙压在旧辙之上' },
+      { id: 'no-cover', label: '案发后无新车辙覆盖' },
+      { id: 'day-busy', label: '官道白日车马繁忙' },
+      { id: 'wound-age', label: '尸身伤口新旧程度' },
     ],
     correctOptionIds: ['rut-newer', 'no-cover', 'day-busy'],
     requiredEvidenceIds: ['rut-on-top', 'no-new-rut', 'daytime-busy'],
@@ -789,8 +835,8 @@ export const deductionSteps04: DeductionStep[] = [
     prompt: '综合以上推断，对本案最准确的定性是？',
     type: 'single',
     options: [
-      { id: 'correct', label: '死亡发生于寅卯时分；死者可能是特殊身份人士，被人预谋伏击于官道空窗期' },
-      { id: 'wrong-1', label: '死亡发生于日间，凶手趁混乱作案' },
+      { id: 'correct', label: '寅卯时分预谋伏击，死者有特殊身份' },
+      { id: 'wrong-1', label: '日间作案，凶手趁混乱' },
       { id: 'wrong-2', label: '死者迷路，意外遭遇路匪' },
     ],
     correctOptionIds: ['correct'],
@@ -839,6 +885,16 @@ export const feedback04: CaseFeedback = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 07 客栈门栓
+//
+// ── 红鲱鱼链：机关或暗道入侵 ────────────────────────────────────────────────
+// 错误结论：客栈有隐藏机关（屋顶、地板、暗道），凶手秘密进入
+// 支持它的表面证据：
+//   - 二人昨日才入住（id: late-arrival）——陌生地点有隐藏机关的可能
+//   - 两壮汉同时被精准杀死（id: two-victims）——武艺极高才能做到
+// 解释不了的关键矛盾：
+//   - 两人倒在门前（id: bodies-at-door）——若凶手从机关进入，两人不必走到门边
+// 复盘拆解：密室第一反应是机关，两壮汉被瞬间杀死也支持"超强刺客"形象；
+//   但两人倒在门前这一位置细节说明他们走向了门口，而不是被突袭于原地，机关说无法解释此细节。
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const evidenceList07: Evidence[] = [
@@ -949,7 +1005,7 @@ export const investigationNodes07: InvestigationNode[] = [
     id: 'deduce-entry',
     type: 'evidence',
     title: '分析进入方式',
-    result: '门窗均无破坏痕迹，凶手不是硬闯。门栓从内插好，说明有人在案发前（或案发时）主动开门。死者倒在门边，正好说明他们走向了门口。',
+    result: '门无撬痕，窗台无手印，门栓仍从内侧插好。两人倒在门附近而非床铺旁。进入方式上，目前可以排除强行破门和翻窗两种可能；剩余的进入路径都需要门在案发时处于开启状态。',
     cost: 1,
     requires: ['scene-door'],
     evidenceIds: ['bolt-intact', 'bodies-at-door'],
@@ -1011,9 +1067,9 @@ export const deductionSteps07: DeductionStep[] = [
     prompt: '本案最准确的定性是？',
     type: 'single',
     options: [
-      { id: 'correct', label: '凶手是死者熟悉或不设防之人，以无威胁形象诱使死者开门，瞬间出手杀人' },
-      { id: 'wrong-1', label: '凶手从屋顶或地下通道秘密进入' },
-      { id: 'wrong-2', label: '客栈掌柜监守自盗，趁机行凶' },
+      { id: 'correct', label: '死者开门迎接，凶手是不设防之人' },
+      { id: 'wrong-1', label: '凶手经屋顶或地道秘密入室' },
+      { id: 'wrong-2', label: '掌柜趁机行凶' },
     ],
     correctOptionIds: ['correct'],
     requiredEvidenceIds: ['bolt-intact', 'bodies-at-door', 'clean-cut', 'no-fight'],
@@ -1061,6 +1117,16 @@ export const feedback07: CaseFeedback = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 13 夜来的假钦差
+//
+// ── 红鲱鱼链：真钦差，下属出错 ──────────────────────────────────────────────
+// 错误结论：钦差是真的，只是执行人员出了差错（借了外卫制服、籍贯登记有误）
+// 支持它的表面证据：
+//   - 诏书内容合情合理（id: edict-content）——内容无破绽，说明对方了解朝局
+//   - 来人知晓宫中事务细节（隐含场景）——不像完全的外行
+// 解释不了的关键矛盾：
+//   - 皇帝不知老臣在此（id: emperor-unaware）——若是真圣旨，皇帝不知行踪则圣旨无从发出
+// 复盘拆解：诏书内容合理+对宫廷熟悉让人相信可能是真钦差；
+//   但行踪未公开这一前提在逻辑上斩断了"真圣旨"的可能——诏书的来源比内容更重要。
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const evidenceList13: Evidence[] = [
@@ -1215,9 +1281,9 @@ export const deductionSteps13: DeductionStep[] = [
     prompt: '综合所有证据，对本案最准确的定性是？',
     type: 'single',
     options: [
-      { id: 'correct', label: '这是一支假钦差，伪造圣旨，目的是将老臣诱离馆驿加以控制' },
-      { id: 'wrong-1', label: '钦差是真的，只是执行任务的是冒牌下属' },
-      { id: 'wrong-2', label: '诏书真假不明，但来人行为异常，应先按兵不动' },
+      { id: 'correct', label: '假钦差伪造圣旨，意图将老臣诱离' },
+      { id: 'wrong-1', label: '真钦差，执行人员出了差错' },
+      { id: 'wrong-2', label: '诏书真假待定，先按兵不动' },
     ],
     correctOptionIds: ['correct'],
     requiredEvidenceIds: ['wrong-boots', 'accent-mismatch', 'emperor-unaware', 'edict-arrived'],
@@ -1263,6 +1329,16 @@ export const feedback13: CaseFeedback = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 21 指南车下的吸铁石
+//
+// ── 红鲱鱼链：地形复杂自然迷路 ──────────────────────────────────────────────
+// 错误结论：谷地地形复杂，历史上也有自然迷路记录，此次属意外
+// 支持它的表面证据：
+//   - 谷地地形复杂易迷路（id: terrain-error）——有历史先例，合理背景
+//   - 当日有薄雾（场景）——能见度降低加大迷路风险
+// 解释不了的关键矛盾：
+//   - 指南车下发现吸铁石（id: magnet-found）——自然迷路无法解释为何车底会有人为放置的铁石
+// 复盘拆解：地形复杂+薄雾是非常合理的自然因素；
+//   但铁石的存在是人为物证，自然迷路无论如何解释不了这块铁石是怎么到指南车底部的。
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const evidenceList21: Evidence[] = [
@@ -1349,7 +1425,7 @@ export const investigationNodes21: InvestigationNode[] = [
     id: 'deduce-sabotage',
     type: 'evidence',
     title: '分析地图与指南车的矛盾',
-    result: '军中有地图，正常导航应互相校验。如果两者同时失效，说明有人刻意破坏工具；如果只有指南车失效，说明吸铁石是蓄意放置的，而非自然误差。',
+    result: '军中同时备有地图和指南车，正常情况下两者互相校验，理应避免迷路。目前情形是：地图未发现问题，指南车下有吸铁石，而实际路线与地图预定方向存在固定偏差。',
     cost: 1,
     requires: ['scene-route'],
     evidenceIds: ['had-map', 'magnet-found'],
@@ -1420,9 +1496,9 @@ export const deductionSteps21: DeductionStep[] = [
     prompt: '综合以上推断，对本案最准确的定性是？',
     type: 'single',
     options: [
-      { id: 'correct', label: '有人在指南车下放置吸铁石，使军队按错误方向进入伏击圈；结合路线泄露，疑有内奸配合' },
-      { id: 'wrong-1', label: '军队因地形复杂迷路，恰好进入敌方据点' },
-      { id: 'wrong-2', label: '指南车制造缺陷，与敌方无关' },
+      { id: 'correct', label: '指南车被人为干扰，疑有内奸配合' },
+      { id: 'wrong-1', label: '地形复杂自然迷路，恰好进入敌方据点' },
+      { id: 'wrong-2', label: '指南车制造缺陷，与敌无关' },
     ],
     correctOptionIds: ['correct'],
     requiredEvidenceIds: ['magnet-found', 'magnet-interferes', 'wrong-direction', 'ambush-circle'],
@@ -1469,6 +1545,16 @@ export const feedback21: CaseFeedback = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 25 三句遗言
+//
+// ── 红鲱鱼链：神意预言 ───────────────────────────────────────────────────────
+// 错误结论："大地动"是上天示警，"黑暗之山"是某宗教势力，饷银只是偶发意外
+// 支持它的表面证据：
+//   - 地动被解读为神意（id: supernatural-read）——当地民间普遍如此理解
+//   - 丫鬟身份低微（id: low-status）——普通人说的话容易被理解为迷信而非情报
+// 解释不了的关键矛盾：
+//   - 萧娘身上有信物（id: token-on-body）——如果只是神意，她不会持有与某势力相关的铜牌
+// 复盘拆解：民间将地动解读为神意是真实背景，萧娘临死前说出这些词也可能被理解为恐惧+迷信；
+//   但信物的存在说明她接触了具体的人或事，而不只是听了民间传言。
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const evidenceList25: Evidence[] = [
@@ -1554,7 +1640,7 @@ export const investigationNodes25: InvestigationNode[] = [
     id: 'deduce-syntax',
     type: 'evidence',
     title: '尝试三种组合句法',
-    result: '排除"引发地动"（人力不可能）；排除"知道地动"（无法解释饷银）；只有"利用地动劫饷"能同时解释三个词：黑暗之山利用地动劫了饷银。',
+    result: '三种句法各自的问题：\n"引发地动"——以当时技术，人力无法制造真正地震，此读法与已知事实矛盾。\n"知道地动将发生"——即便能预知，也无法解释"饷银"为何出现在遗言里，三词之间仍缺乏因果关系。\n"利用地动造成的混乱"——需要结合饷银运输情况进一步核查，看三词是否能形成完整因果链。',
     cost: 1,
     requires: ['knowledge-quake'],
     evidenceIds: ['three-words', 'quake-not-manmade'],
@@ -1632,9 +1718,9 @@ export const deductionSteps25: DeductionStep[] = [
     prompt: '根据三句遗言，最完整的推理结论是？',
     type: 'single',
     options: [
-      { id: 'correct', label: '黑山势力利用地动造成的混乱劫走饷银；萧娘因目睹或听闻此事而被灭口' },
-      { id: 'wrong-1', label: '地动是神意，饷银被天灾损毁，萧娘是无辜受害者' },
-      { id: 'wrong-2', label: '黑山势力制造了地动，借此达到政治目的，饷银是副产品' },
+      { id: 'correct', label: '趁地动劫饷，萧娘因知情被灭口' },
+      { id: 'wrong-1', label: '地动是神意，萧娘是无辜受害者' },
+      { id: 'wrong-2', label: '黑山势力制造了地动，饷银是副产品' },
     ],
     correctOptionIds: ['correct'],
     requiredEvidenceIds: ['three-words', 'quake-not-manmade', 'token-on-body', 'rations-moved'],
