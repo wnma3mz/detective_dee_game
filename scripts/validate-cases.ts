@@ -107,15 +107,73 @@ for (const [caseId, ext] of Object.entries(caseExtensions)) {
   }
 }
 
+// ── 文本 lint（warning，不 fail） ─────────────────────────────────────────────
+//
+// 仅扫描玩家在"勘查结束前"就能看到的字段：
+//   InvestigationNode.result / Evidence.content（非 type:knowledge 节点的 result 仍需规范）
+//   DeductionStep.option.label
+//
+// 以下高风险词直接给出结论，不应出现在这些字段中。
+// 初判/复盘 feedback 字段不在此范围，可以给解释。
+const FORBIDDEN_PATTERNS = [
+  { pattern: /说明(?:凶手|真相|此|他|她|来|是|有人|行凶|栽赃|没有|死者)/, label: '说明+结论' },
+  { pattern: /(?:^|[^一二三四五六七八九十百])只有(?:一种|这种|[^，。\s]{0,4}才)/, label: '只有…才（独断句）' },
+  { pattern: /不可能(?:是|知道|看到|做到|完成|发生|自然|人工|存在)/, label: '不可能+结论' },
+  { pattern: /即栽赃/, label: '即栽赃' },
+  { pattern: /真正目标/, label: '真正目标' },
+  { pattern: /无法成立/, label: '无法成立' },
+];
+
+type LintWarning = { caseId: string; field: string; matched: string; text: string };
+const warnings: LintWarning[] = [];
+
+function warnText(caseId: string, field: string, text: string) {
+  for (const { pattern, label } of FORBIDDEN_PATTERNS) {
+    if (pattern.test(text)) {
+      warnings.push({ caseId, field, matched: label, text: text.slice(0, 80) });
+    }
+  }
+}
+
+for (const [caseId, ext] of Object.entries(caseExtensions)) {
+  const { evidenceList, investigationNodes, deductionSteps } = ext;
+
+  // Evidence.content（所有角色，含 decoy）
+  for (const ev of evidenceList) {
+    warnText(caseId, `evidence[${ev.id}].content`, ev.content);
+  }
+
+  // InvestigationNode.result（knowledge 节点豁免）
+  for (const node of investigationNodes) {
+    if (node.type === 'knowledge') continue;
+    warnText(caseId, `node[${node.id}].result`, node.result);
+  }
+
+  // DeductionStep.option.label
+  for (const step of deductionSteps) {
+    for (const opt of step.options ?? []) {
+      warnText(caseId, `step[${step.id}].option[${opt.id}].label`, opt.label);
+    }
+  }
+}
+
 // ── 输出结果 ─────────────────────────────────────────────────────────────────
 
 if (errors.length === 0) {
   console.log('✅ 所有精制版案件数据校验通过，无断链。');
-  process.exit(0);
 } else {
   console.error(`\n❌ 发现 ${errors.length} 处数据问题：\n`);
   for (const e of errors) {
     console.error(`  [案件 ${e.caseId}] ${e.field}\n    → ${e.message}\n`);
   }
   process.exit(1);
+}
+
+if (warnings.length > 0) {
+  console.warn(`\n⚠️  文本 lint：发现 ${warnings.length} 处勘查前可见字段中的高风险词（warning，不影响 build）：\n`);
+  for (const w of warnings) {
+    console.warn(`  [案件 ${w.caseId}] ${w.field}\n    命中：「${w.matched}」\n    文本：${w.text}\n`);
+  }
+} else {
+  console.log('✅ 文本 lint 通过，勘查前可见字段无高风险词。');
 }

@@ -1373,7 +1373,7 @@ export const evidenceList21: Evidence[] = [
   {
     id: 'ambush-circle',
     title: '伏击圈显然早有准备',
-    content: '伏击圈内敌军埋伏整齐，说明对方预知了军队的路线，不是偶然遭遇。',
+    content: '伏击圈内敌军阵列整齐，弓弩手分布两侧高地，辎重车已就位；伏击位置与军队实际行进路线高度吻合，旧路线方向未见敌迹。',
     role: 'supporting',
     supports: ['trap', 'insider'],
   },
@@ -1434,7 +1434,7 @@ export const investigationNodes21: InvestigationNode[] = [
     id: 'witness-ambush',
     type: 'witness',
     title: '询问侦察兵：伏击圈情况',
-    result: '伏击圈内敌军阵列整齐，显然等候多时，不是偶然遭遇。对方必定事先知道我军会走这条路。',
+    result: '伏击圈内敌军阵列整齐，弓弩手据守两侧高地，辎重车已布置完毕。侦察兵估计敌方至少在此等候了一个时辰以上。伏击位置与实际行进路线吻合，旧路线方向无敌军踪迹。',
     cost: 1,
     evidenceIds: ['ambush-circle'],
     unlocks: ['witness-route-change'],
