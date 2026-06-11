@@ -80,9 +80,16 @@ export type InvestigationNode = {
   result: string;
   /** 消耗行动点数，默认 1 */
   cost: number;
-  /** 前置条件：须先解锁这些节点 */
+  /**
+   * 前置条件：须先解锁这些节点，本节点才会在 UI 中出现。
+   * 这是节点可见性的唯一计算规则，UI 只看 requires。
+   */
   requires?: string[];
-  /** 解锁此节点后，会新出现哪些节点 */
+  /**
+   * 内容设计标注：解锁本节点后"逻辑上会引出"哪些后续节点。
+   * 仅作策划提示，不参与 UI 状态计算。
+   * 后续节点的实际可见性仍由那些节点自身的 requires 决定。
+   */
   unlocks?: string[];
   /** 本节点关联的证据 id */
   evidenceIds?: string[];
@@ -147,6 +154,10 @@ export type DetectiveCase = {
   investigationNodes?: InvestigationNode[];
   deductionSteps?: DeductionStep[];
   feedback?: CaseFeedback;
+  /** 调查行动点上限，精制版案件设置，超出后禁止继续调查 */
+  actionPointLimit?: number;
+  /** 阅卷初判选项（不计分，仅用于复盘对比） */
+  initialHypotheses?: { id: string; label: string; feedback: string }[];
 };
 
 export type CaseProgress = {
@@ -163,6 +174,8 @@ export type CaseProgress = {
   // 新字段
   unlockedNodeIds: string[];
   deductionAnswers: Record<string, string[]>;
+  actionPointsSpent: number;
+  initialHypothesisId: string;
 };
 
 export type ProgressStore = Record<string, CaseProgress>;

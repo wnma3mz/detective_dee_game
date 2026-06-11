@@ -51,12 +51,11 @@ export function calculateScore(gameCase: DetectiveCase, progress: CaseProgress):
       const correct = step.correctOptionIds ?? [];
       const maxScore = step.maxScore ?? 2;
 
-      // 检查该步骤要求的证据是否已被玩家选择
+      // 检查该步骤要求的证据命中率，命中越多倍率越高
       const requiredEvidenceIds = step.requiredEvidenceIds ?? [];
-      const evidenceCovered =
-        requiredEvidenceIds.length === 0 ||
-        requiredEvidenceIds.some((eid) => progress.selectedEvidenceIds.includes(eid));
-      const evidenceMultiplier = evidenceCovered ? 1 : 0.6;
+      const hits = requiredEvidenceIds.filter((eid) => progress.selectedEvidenceIds.includes(eid)).length;
+      const evidenceMultiplier =
+        requiredEvidenceIds.length === 0 ? 1 : 0.6 + 0.4 * (hits / requiredEvidenceIds.length);
 
       if (step.type === 'text') {
         if (answers[0]?.trim()) total += maxScore * evidenceMultiplier;

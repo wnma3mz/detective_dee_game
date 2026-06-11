@@ -97,8 +97,6 @@ function NewInvestigationPanel({
   const limit = gameCase.actionPointLimit;
   const spent = progress.actionPointsSpent;
   const remaining = limit != null ? limit - spent : null;
-  const isExhausted = remaining != null && remaining <= 0;
-
   const visibleNodes = nodes.filter((node) => {
     if (!node.requires || node.requires.length === 0) return true;
     return node.requires.every((req) => progress.unlockedNodeIds.includes(req));
@@ -115,8 +113,8 @@ function NewInvestigationPanel({
               <span key={i} className={`pip ${i < spent ? 'used' : ''}`} />
             ))}
           </div>
-          <span className={`action-points-remain ${isExhausted ? 'exhausted' : ''}`}>
-            {isExhausted ? '已用尽' : `剩余 ${remaining}`}
+          <span className={`action-points-remain ${remaining === 0 ? 'exhausted' : ''}`}>
+            {remaining === 0 ? '已用尽' : `剩余 ${remaining}`}
           </span>
         </div>
       )}
@@ -124,7 +122,7 @@ function NewInvestigationPanel({
       <div className="actions-grid">
         {visibleNodes.map((node) => {
           const unlocked = progress.unlockedNodeIds.includes(node.id);
-          const canInvestigate = !isExhausted || unlocked;
+          const canInvestigate = unlocked || remaining == null || remaining >= node.cost;
           return (
             <div className={`action-card ${unlocked ? 'unlocked' : ''} ${!canInvestigate ? 'locked-out' : ''}`} key={node.id}>
               <div className="action-title" style={{ gap: '0.4rem' }}>
@@ -323,11 +321,15 @@ function NewReviewPanel({
               ? answers[0] === correct[0]
               : correct.every((c) => answers.includes(c)) && answers.every((a) => correct.includes(a));
 
-        // 检查该步骤所需证据是否已被玩家选择
+        // 计算证据命中率（与评分逻辑一致）
         const requiredEvidenceIds = step.requiredEvidenceIds ?? [];
-        const evidenceCovered =
-          requiredEvidenceIds.length === 0 ||
-          requiredEvidenceIds.some((eid) => progress.selectedEvidenceIds.includes(eid));
+        const evidenceHits = requiredEvidenceIds.filter((eid) => progress.selectedEvidenceIds.includes(eid)).length;
+        const evidenceMultiplier =
+          requiredEvidenceIds.length === 0 ? 1 : 0.6 + 0.4 * (evidenceHits / requiredEvidenceIds.length);
+        const evidenceWarning =
+          requiredEvidenceIds.length > 0 && evidenceMultiplier < 1
+            ? `方向正确，但证据支撑不足（命中 ${evidenceHits}/${requiredEvidenceIds.length}），得分按 ${Math.round(evidenceMultiplier * 100)}% 计算。`
+            : null;
 
         // 获取选项反馈
         const optionFeedbacks = answers
@@ -343,9 +345,9 @@ function NewReviewPanel({
             {optionFeedbacks.length > 0 && (
               <p className="review-step-feedback">{optionFeedbacks[0]}</p>
             )}
-            {isCorrect && !evidenceCovered && (
+            {isCorrect && evidenceWarning && (
               <p className="review-step-feedback" style={{ color: 'var(--accent-gold)' }}>
-                方向正确，但缺少支撑该推论的关键证据，得分打六折。
+                {evidenceWarning}
               </p>
             )}
           </div>

@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "validate:cases": "tsx scripts/validate-cases.ts",
+    "check": "npm run validate:cases && npm run build"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
@@ -19,6 +21,7 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3"
+    "@types/react-dom": "^19.2.3",
+    "tsx": "^4.19.3"
   }
 }
