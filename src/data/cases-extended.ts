@@ -1394,12 +1394,32 @@ export const evidenceList21: Evidence[] = [
 ];
 
 export const investigationNodes21: InvestigationNode[] = [
+  // ── 基础节点：先给路线偏差和竞争解释，再才能检查指南车 ────────────────────
+  {
+    id: 'scene-fog',
+    type: 'scene',
+    title: '查看行军当日天气记录',
+    result: '随军书记官记录：出发当日辰时至午时有薄雾，能见度约二十步。谷地山势遮蔽，雾散较平原迟，午后才完全转晴。历史上该地在雾天有迷路先例。',
+    cost: 1,
+    evidenceIds: ['terrain-error'],
+    unlocks: ['scene-compass'],
+  },
+  {
+    id: 'witness-guide',
+    type: 'witness',
+    title: '询问带路向导',
+    result: '向导称自己全程跟随主帅，依指南车所指引路；雾散后感觉方向有偏，但主帅坚持相信指南车，未采纳向导的口头估算。向导补充：他凭地形判断的方向与指南车指示相差约三四十度。',
+    cost: 1,
+    unlocks: ['scene-compass'],
+  },
   {
     id: 'scene-compass',
     type: 'scene',
     title: '检查指南车底盘与磁针机关',
+    prompt: '路线偏差约四十度，向导口头估算与指南车不符——有必要对指南车本身做进一步检查。',
     result: '指南车底部靠近磁针处有一块外来铁石，颜色和材质与车体明显不同，显然是后来放入的。',
     cost: 1,
+    requires: ['scene-route'],
     evidenceIds: ['magnet-found'],
     unlocks: ['knowledge-magnet'],
   },
@@ -1882,7 +1902,7 @@ export const caseExtensions: Record<string, {
     investigationNodes: investigationNodes21,
     deductionSteps: deductionSteps21,
     feedback: feedback21,
-    actionPointLimit: 5,  // 共6个节点（含1个追问），入门机关案
+    actionPointLimit: 7,  // 共8个节点（含2个竞争解释节点），高阶机关案；最优路径约5-6点
     initialHypotheses: initialHypotheses21,
   },
   '25': {
