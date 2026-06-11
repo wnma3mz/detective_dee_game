@@ -149,10 +149,29 @@ for (const [caseId, ext] of Object.entries(caseExtensions)) {
     warnText(caseId, `node[${node.id}].result`, node.result);
   }
 
-  // DeductionStep.option.label
+  // DeductionStep.option.label — 禁用词扫描 + 长度差检查
   for (const step of deductionSteps) {
-    for (const opt of step.options ?? []) {
+    const opts = step.options ?? [];
+    for (const opt of opts) {
       warnText(caseId, `step[${step.id}].option[${opt.id}].label`, opt.label);
+    }
+
+    // 长度差检查：正确选项的字数不应显著超过所有错误选项
+    // 阈值：正确选项比最长错误选项多超过 6 个字视为警告
+    const correctIds = new Set(step.correctOptionIds ?? []);
+    if (correctIds.size === 0 || opts.length < 2) continue;
+    const correctLens = opts.filter((o) => correctIds.has(o.id)).map((o) => o.label.length);
+    const wrongLens = opts.filter((o) => !correctIds.has(o.id)).map((o) => o.label.length);
+    if (wrongLens.length === 0) continue;
+    const maxCorrect = Math.max(...correctLens);
+    const maxWrong = Math.max(...wrongLens);
+    if (maxCorrect - maxWrong > 6) {
+      warnings.push({
+        caseId,
+        field: `step[${step.id}]`,
+        matched: '正确选项过长',
+        text: `正确选项最长 ${maxCorrect} 字，错误选项最长 ${maxWrong} 字，差值 ${maxCorrect - maxWrong}`,
+      });
     }
   }
 }
