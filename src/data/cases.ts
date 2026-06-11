@@ -1,4 +1,5 @@
 import type { CaseCategory, DetectiveCase, Difficulty } from './types';
+import { caseExtensions } from './cases-extended';
 
 type CaseSeed = {
   id: string;
@@ -857,4 +858,15 @@ const seeds: CaseSeed[] = [
   },
 ];
 
-export const cases: DetectiveCase[] = seeds.map(buildCase);
+export const cases: DetectiveCase[] = seeds.map((seed) => {
+  const base = buildCase(seed);
+  const ext = caseExtensions[seed.id];
+  if (!ext) return base;
+  return {
+    ...base,
+    evidenceList: ext.evidenceList,
+    investigationNodes: ext.investigationNodes,
+    deductionSteps: ext.deductionSteps,
+    feedback: ext.feedback,
+  };
+});

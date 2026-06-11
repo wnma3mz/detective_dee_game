@@ -824,3 +824,150 @@ textarea:focus {
     padding: 1rem;
   }
 }
+
+/* ── 复盘诊断组件 ─────────────────────────────────────────────────────────── */
+
+.review-diagnosis {
+  margin-top: 1.5rem;
+}
+
+.review-verdict {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.review-verdict.correct {
+  background: rgba(92, 160, 80, 0.12);
+  color: #5ca050;
+  border: 1px solid rgba(92, 160, 80, 0.3);
+}
+
+.review-verdict.wrong {
+  background: rgba(139, 43, 43, 0.12);
+  color: var(--accent-red);
+  border: 1px solid rgba(139, 43, 43, 0.3);
+}
+
+.review-summary {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+}
+
+.review-step {
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.5rem;
+  border-radius: 5px;
+  border-left: 3px solid transparent;
+}
+
+.review-step.correct {
+  background: rgba(92, 160, 80, 0.07);
+  border-color: #5ca050;
+}
+
+.review-step.wrong {
+  background: rgba(139, 43, 43, 0.07);
+  border-color: var(--accent-red);
+}
+
+.review-step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.review-step-header svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.review-step-feedback {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0.4rem 0 0 1.4rem;
+  line-height: 1.6;
+}
+
+.review-evidence {
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.5rem;
+  border-radius: 5px;
+  border-left: 3px solid transparent;
+}
+
+.review-evidence-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.evidence-badge {
+  font-size: 0.72rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.review-evidence.evidence-key {
+  background: rgba(184, 142, 70, 0.08);
+  border-color: var(--accent-gold);
+}
+
+.evidence-badge.evidence-key {
+  background: rgba(184, 142, 70, 0.2);
+  color: var(--accent-gold);
+}
+
+.review-evidence.evidence-supporting {
+  background: rgba(100, 130, 180, 0.07);
+  border-color: #647aad;
+}
+
+.evidence-badge.evidence-supporting {
+  background: rgba(100, 130, 180, 0.15);
+  color: #8ba0cc;
+}
+
+.review-evidence.evidence-context {
+  background: rgba(130, 130, 130, 0.07);
+  border-color: #666;
+}
+
+.evidence-badge.evidence-context {
+  background: rgba(130, 130, 130, 0.15);
+  color: #999;
+}
+
+.review-evidence.evidence-decoy {
+  background: rgba(139, 43, 43, 0.07);
+  border-color: var(--accent-red);
+}
+
+.evidence-badge.evidence-decoy {
+  background: rgba(139, 43, 43, 0.15);
+  color: var(--accent-red);
+}
+
+.review-evidence.evidence-missing {
+  background: rgba(184, 142, 70, 0.05);
+  border-color: rgba(184, 142, 70, 0.4);
+  border-style: dashed;
+}
+
+.evidence-badge.evidence-missing {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px dashed var(--text-muted);
+}
