@@ -623,8 +623,1095 @@ export const feedback09: CaseFeedback = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 04 闭城后的车辙
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const evidenceList04: Evidence[] = [
+  {
+    id: 'rut-on-top',
+    title: '死者车辙压旧辙',
+    content: '死者马车的车辙叠压在更早的旧车辙之上，说明死者经过时间晚于旧车。',
+    role: 'key',
+    supports: ['time-window', 'night-travel'],
+  },
+  {
+    id: 'no-new-rut',
+    title: '案发后无新车辙',
+    content: '从案发到报案之间，路面没有新车辙覆盖，说明此后无车经过。',
+    role: 'key',
+    supports: ['time-window', 'road-empty'],
+  },
+  {
+    id: 'gate-hours',
+    title: '城门丑末关辰时开',
+    content: '神都城门丑末（约凌晨1-2时）关闭，辰时（约7-9时）开启。',
+    role: 'key',
+    supports: ['night-travel', 'abnormal-timing'],
+  },
+  {
+    id: 'heading-city',
+    title: '死者仍朝神都方向赶',
+    content: '死者已知城门关闭时段，却仍往神都方向行进，行为本身高度反常。',
+    role: 'key',
+    supports: ['special-identity', 'abnormal-timing'],
+  },
+  {
+    id: 'large-hoofprint',
+    title: '异常巨大的蹄印',
+    content: '现场旁边有一排格外巨大的蹄印，不像寻常驿马或拉车马所留。',
+    role: 'supporting',
+    supports: ['special-identity'],
+  },
+  {
+    id: 'daytime-busy',
+    title: '官道白日车马繁忙',
+    content: '官道日间人来人往，车辙持续被覆盖。只有夜间闭城后，才会出现长时间无车的空窗期。',
+    role: 'context',
+    supports: ['time-window'],
+  },
+  {
+    id: 'fresh-wound',
+    title: '尸身伤口较新',
+    content: '死者伤口未见明显腐化，判断死亡时间不超过一夜。',
+    role: 'decoy',
+    misleadsTo: ['daytime-murder'],
+  },
+];
+
+export const investigationNodes04: InvestigationNode[] = [
+  {
+    id: 'scene-rut',
+    type: 'scene',
+    title: '查看路面车辙覆盖关系',
+    result: '死者马车的车辙最新、最清晰，压在数道旧辙之上。案发到报案之间，路面没有留下新车辙。',
+    cost: 1,
+    evidenceIds: ['rut-on-top', 'no-new-rut'],
+    unlocks: ['deduce-time-window'],
+  },
+  {
+    id: 'scene-hoofprint',
+    type: 'scene',
+    title: '检查周边蹄印',
+    result: '案发地周边有一排蹄印，蹄形异常宽大，远超普通驿马，且步幅均匀，像是有备而来的坐骑。',
+    cost: 1,
+    evidenceIds: ['large-hoofprint'],
+  },
+  {
+    id: 'knowledge-gate',
+    type: 'knowledge',
+    title: '核查神都城门开闭时间',
+    result: '城门丑末（约凌晨两时）关闭，辰时（约早七时）开启。闭城后普通百姓无法入城，也不允许在官道停留。',
+    cost: 1,
+    evidenceIds: ['gate-hours', 'daytime-busy'],
+    unlocks: ['witness-direction'],
+  },
+  {
+    id: 'witness-direction',
+    type: 'witness',
+    title: '询问报案人：死者行进方向',
+    result: '报案人见到死者时，其马车正朝神都城门方向行进。死者一定知道城门已关，却仍然朝那个方向走。',
+    cost: 1,
+    requires: ['knowledge-gate'],
+    evidenceIds: ['heading-city'],
+    unlocks: ['deduce-identity'],
+  },
+  {
+    id: 'scene-body',
+    type: 'scene',
+    title: '查看尸身状况',
+    result: '死者伤口利器所致，无挣扎痕迹，倒毙于车旁。伤口较新，判断死亡时间不超过一夜，但无法确定具体时辰。',
+    cost: 1,
+    evidenceIds: ['fresh-wound'],
+  },
+  {
+    id: 'deduce-time-window',
+    type: 'timeline',
+    title: '推算路面空窗期',
+    result: '官道白日繁忙，车辙持续被覆盖。死者车辙未被覆盖，且案发后也无新车辙——只有闭城后的寅卯时分（约凌晨3-5时），官道才会长时间无车。',
+    cost: 1,
+    requires: ['scene-rut'],
+    evidenceIds: ['daytime-busy', 'no-new-rut'],
+  },
+  {
+    id: 'deduce-identity',
+    type: 'witness',
+    title: '追问：何人敢在闭城后赶路',
+    result: '普通百姓闭城后不赶路，除非有特殊通行凭证或紧急任务。死者朝城门赶路，极可能是持有夜行牌的官差或密探。',
+    cost: 1,
+    requires: ['witness-direction'],
+    evidenceIds: ['heading-city'],
+  },
+];
+
+export const deductionSteps04: DeductionStep[] = [
+  {
+    id: 'step-time',
+    prompt: '根据车辙覆盖关系和城门开闭时间，案发最可能发生在哪个时段？',
+    type: 'single',
+    options: [
+      { id: 'daytime', label: '日间（巳时至戌时，城门开着）' },
+      { id: 'nightfall', label: '傍晚闭城前（亥时至丑时）' },
+      { id: 'yin-mao', label: '寅卯时分（闭城后官道无车的空窗期）' },
+    ],
+    correctOptionIds: ['yin-mao'],
+    requiredEvidenceIds: ['rut-on-top', 'no-new-rut', 'gate-hours'],
+    maxScore: 3,
+  },
+  {
+    id: 'step-logic',
+    prompt: '推断案发时间的关键逻辑链是什么？',
+    type: 'multi',
+    options: [
+      { id: 'rut-newer', label: '死者车辙最新，压旧辙' },
+      { id: 'no-cover', label: '之后无新车辙覆盖，路面无人经过' },
+      { id: 'day-busy', label: '官道白日繁忙，车辙不可能长时间不被覆盖' },
+      { id: 'wound-age', label: '伤口新旧程度' },
+    ],
+    correctOptionIds: ['rut-newer', 'no-cover', 'day-busy'],
+    requiredEvidenceIds: ['rut-on-top', 'no-new-rut', 'daytime-busy'],
+    maxScore: 2,
+  },
+  {
+    id: 'step-abnormal',
+    prompt: '死者在闭城后仍往神都方向赶，最合理的解释是什么？',
+    type: 'single',
+    options: [
+      { id: 'lost', label: '死者不知道城门已关，方向走错' },
+      { id: 'special-id', label: '死者持有夜行凭证，有特殊身份或紧急使命' },
+      { id: 'forced', label: '死者被人劫持，被迫往前走' },
+    ],
+    correctOptionIds: ['special-id'],
+    requiredEvidenceIds: ['heading-city', 'gate-hours'],
+    maxScore: 2,
+  },
+  {
+    id: 'step-conclusion',
+    prompt: '综合以上推断，对本案最准确的定性是？',
+    type: 'single',
+    options: [
+      { id: 'correct', label: '死亡发生于寅卯时分；死者可能是特殊身份人士，被人预谋伏击于官道空窗期' },
+      { id: 'wrong-1', label: '死亡发生于日间，凶手趁混乱作案' },
+      { id: 'wrong-2', label: '死者迷路，意外遭遇路匪' },
+    ],
+    correctOptionIds: ['correct'],
+    requiredEvidenceIds: ['rut-on-top', 'no-new-rut', 'gate-hours', 'heading-city'],
+    maxScore: 3,
+  },
+];
+
+export const feedback04: CaseFeedback = {
+  optionFeedback: {
+    'daytime': '日间官道繁忙，车辙很快会被覆盖，死者车辙不可能保留到报案时仍最清晰。',
+    'nightfall': '傍晚闭城前仍有人流，无法解释死者车辙未被覆盖这一事实。',
+    'yin-mao': '正确。只有官道真正安静的深夜空窗期，才能同时解释"最新车辙未被覆盖"和"此后无车经过"。',
+    'rut-newer': '正确。这是推断顺序的第一步。',
+    'no-cover': '正确。这是推断顺序的第二步，两步合并才能锁定时间。',
+    'day-busy': '正确。有了这个背景知识，才能理解为什么空窗期必然是夜间。',
+    'wound-age': '伤口新旧只能说明"不超过一夜"，无法精确到时辰，是辅助排除信息，不是核心逻辑链。',
+    'lost': '闭城是公开制度，不是秘密消息，正常人不会不知道。',
+    'special-id': '正确。持有夜行牌或奉令赶路，才能解释闭城后仍朝城门方向走。',
+    'forced': '被迫行进通常有挣扎痕迹，且方向也不一定由死者决定，此推论缺乏物证支持。',
+    'correct': '正确。路线时间推理的完整闭环：车辙锁定时间，行进方向揭示身份，两条线索共同指向预谋伏击。',
+    'wrong-1': '日间论无法解释车辙未被覆盖的物证。',
+    'wrong-2': '迷路不能解释死者朝正确（城门）方向走，且大型蹄印暗示有备而来的凶手。',
+  },
+  evidenceFeedback: {
+    'rut-on-top': '关键证据。车辙叠压关系是判断路面时间顺序的核心物证。',
+    'no-new-rut': '关键证据。与"叠压关系"合用，才能锁定时间段。',
+    'gate-hours': '关键证据。城门制度是整条时间推理链的背景知识。',
+    'heading-city': '关键证据。反常行为是推断死者特殊身份的唯一依据。',
+    'large-hoofprint': '辅助证据。暗示凶手有准备，但不足以单独定案。',
+    'daytime-busy': '背景信息。解释了为什么车辙未被覆盖等于夜间作案。',
+    'fresh-wound': '误导证据。"不超过一夜"无法精确到时辰，容易让人以为日间也可能。',
+  },
+  missingKeyEvidence: {
+    'rut-on-top': '你漏掉了"死者车辙压旧辙"——这是判断时间顺序的起点。',
+    'no-new-rut': '你漏掉了"案发后无新车辙"——这是锁定时间段的另一半。',
+    'gate-hours': '你漏掉了"城门丑末关辰时开"——没有这个背景知识，无法理解空窗期的含义。',
+    'heading-city': '你漏掉了"死者仍朝神都方向赶"——这是推断死者特殊身份的关键反常。',
+  },
+  finalSummary: {
+    excellent: '大人思路清晰：先用车辙锁定时间，再用行进方向锁定身份，路线时间推理做到了位。',
+    partial: '大人抓住了时间线，但死者为何在闭城后仍赶路这一点还没有完整解释。',
+    failed: '大人被伤口新旧等表面信息带偏，需要重新以车辙覆盖关系为起点重建推理链。',
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 07 客栈门栓
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const evidenceList07: Evidence[] = [
+  {
+    id: 'bolt-intact',
+    title: '门栓完好无损',
+    content: '房门门栓从内侧插好，没有被撬开或破坏的痕迹，与报案时状态一致。',
+    role: 'key',
+    supports: ['no-forced-entry', 'victim-opened'],
+  },
+  {
+    id: 'window-dust',
+    title: '窗台积灰未动',
+    content: '窗台上的积灰纹丝未动，说明窗户案发前后均未被打开。',
+    role: 'key',
+    supports: ['no-forced-entry'],
+  },
+  {
+    id: 'bodies-at-door',
+    title: '两人倒在门前',
+    content: '两名死者倒在门附近，而非床铺或桌旁，说明他们案发前主动走到了门边。',
+    role: 'key',
+    supports: ['victim-opened', 'door-approach'],
+  },
+  {
+    id: 'clean-cut',
+    title: '咽喉单刀致命伤',
+    content: '两人咽喉各只有一道细致的致命伤，无其他防御伤，出手极为精准。',
+    role: 'key',
+    supports: ['professional-killer', 'no-struggle'],
+  },
+  {
+    id: 'no-noise',
+    title: '隔壁未听见外人进店',
+    content: '隔壁住客表示夜间没有听到外人踏入的声响，只听见一声极短的异响后恢复安静。',
+    role: 'supporting',
+    supports: ['familiar-person', 'no-struggle'],
+  },
+  {
+    id: 'no-fight',
+    title: '屋内无打斗痕迹',
+    content: '家具摆放整齐，地面无血迹飞溅，茶碗未打翻，说明两人毫无防备或根本来不及反抗。',
+    role: 'supporting',
+    supports: ['no-struggle', 'familiar-person'],
+  },
+  {
+    id: 'two-victims',
+    title: '两名壮汉同时被杀',
+    content: '死者均为身形健壮的成年男子，同时被精准杀死，说明凶手武艺极高或死者完全未有防备。',
+    role: 'context',
+    supports: ['professional-killer', 'familiar-person'],
+  },
+  {
+    id: 'late-arrival',
+    title: '二人昨日傍晚才入住',
+    content: '掌柜记录二人昨日傍晚投宿，在此只住了一晚，熟人知道他们在此的可能性不高。',
+    role: 'decoy',
+    misleadsTo: ['stranger-killer'],
+  },
+];
+
+export const investigationNodes07: InvestigationNode[] = [
+  {
+    id: 'scene-door',
+    type: 'scene',
+    title: '检查门栓与门框',
+    result: '门栓从内侧插着，门框和门板没有被撬开或撞击的痕迹。',
+    cost: 1,
+    evidenceIds: ['bolt-intact'],
+    unlocks: ['deduce-entry'],
+  },
+  {
+    id: 'scene-window',
+    type: 'scene',
+    title: '检查窗台积灰',
+    result: '窗台上的灰尘均匀覆盖，没有任何开启痕迹或手印。',
+    cost: 1,
+    evidenceIds: ['window-dust'],
+  },
+  {
+    id: 'scene-bodies',
+    type: 'scene',
+    title: '查看死者倒地位置',
+    result: '两人都倒在靠近房门的位置，而非床铺、椅子旁边。咽喉各一道细口，无其他伤。',
+    cost: 1,
+    evidenceIds: ['bodies-at-door', 'clean-cut', 'no-fight'],
+    unlocks: ['witness-noise'],
+  },
+  {
+    id: 'witness-noise',
+    type: 'witness',
+    title: '询问隔壁住客',
+    result: '隔壁客人说只听到一声极短的异响，之后再无动静。没有脚步声、求救声或打斗声。',
+    cost: 1,
+    requires: ['scene-bodies'],
+    evidenceIds: ['no-noise'],
+  },
+  {
+    id: 'witness-innkeeper',
+    type: 'witness',
+    title: '询问掌柜昨夜动静',
+    result: '掌柜说昨夜无异状，没有陌生人问起这两名客人，也无人深夜到前台。两人是昨日傍晚新来的。',
+    cost: 1,
+    evidenceIds: ['late-arrival'],
+    unlocks: ['deduce-identity'],
+  },
+  {
+    id: 'deduce-entry',
+    type: 'evidence',
+    title: '分析进入方式',
+    result: '门窗均无破坏痕迹，凶手不是硬闯。门栓从内插好，说明有人在案发前（或案发时）主动开门。死者倒在门边，正好说明他们走向了门口。',
+    cost: 1,
+    requires: ['scene-door'],
+    evidenceIds: ['bolt-intact', 'bodies-at-door'],
+  },
+  {
+    id: 'deduce-identity',
+    type: 'witness',
+    title: '追问：谁能让两名壮汉主动开门',
+    result: '两名壮汉在夜间毫无防备地走到门边开门，说明来者是他们不设防的人：可能是同行者、店内伙计，或伪装成掌柜前来送水的人。',
+    cost: 1,
+    requires: ['witness-innkeeper'],
+    evidenceIds: ['two-victims'],
+  },
+];
+
+export const deductionSteps07: DeductionStep[] = [
+  {
+    id: 'step-entry',
+    prompt: '门窗均完好，凶手最可能是如何进入房间的？',
+    type: 'single',
+    options: [
+      { id: 'broke-in', label: '从门或窗硬闯，进入后恢复原状' },
+      { id: 'victim-open', label: '死者主动开门，凶手没有强行破门' },
+      { id: 'hidden-inside', label: '凶手事先藏在房间内等待' },
+    ],
+    correctOptionIds: ['victim-open'],
+    requiredEvidenceIds: ['bolt-intact', 'window-dust', 'bodies-at-door'],
+    maxScore: 3,
+  },
+  {
+    id: 'step-evidence',
+    prompt: '哪些证据共同支撑"死者主动开门"这一推断？',
+    type: 'multi',
+    options: [
+      { id: 'e-bolt', label: '门栓完好无损' },
+      { id: 'e-window', label: '窗台积灰未动' },
+      { id: 'e-bodies', label: '两人倒在门前' },
+      { id: 'e-arrival', label: '二人昨日才入住' },
+    ],
+    correctOptionIds: ['e-bolt', 'e-window', 'e-bodies'],
+    requiredEvidenceIds: ['bolt-intact', 'window-dust', 'bodies-at-door'],
+    maxScore: 2,
+  },
+  {
+    id: 'step-killer',
+    prompt: '凶手能让两名壮汉毫无防备地走到门边，最可能是什么人？',
+    type: 'single',
+    options: [
+      { id: 'stranger', label: '完全陌生的路匪，趁深夜强攻' },
+      { id: 'familiar', label: '死者熟悉或不设防的人（同行者、店内人员等）' },
+      { id: 'assassin', label: '极高武艺的刺客，强行突破' },
+    ],
+    correctOptionIds: ['familiar'],
+    requiredEvidenceIds: ['no-noise', 'clean-cut', 'no-fight'],
+    maxScore: 2,
+  },
+  {
+    id: 'step-conclusion',
+    prompt: '本案最准确的定性是？',
+    type: 'single',
+    options: [
+      { id: 'correct', label: '凶手是死者熟悉或不设防之人，以无威胁形象诱使死者开门，瞬间出手杀人' },
+      { id: 'wrong-1', label: '凶手从屋顶或地下通道秘密进入' },
+      { id: 'wrong-2', label: '客栈掌柜监守自盗，趁机行凶' },
+    ],
+    correctOptionIds: ['correct'],
+    requiredEvidenceIds: ['bolt-intact', 'bodies-at-door', 'clean-cut', 'no-fight'],
+    maxScore: 3,
+  },
+];
+
+export const feedback07: CaseFeedback = {
+  optionFeedback: {
+    'broke-in': '门窗均无破坏痕迹，恢复原状的说法缺乏物证支持，过度推测。',
+    'victim-open': '正确。门栓完好+两人倒在门边，两条证据合用才能得出这个结论。',
+    'hidden-inside': '事先藏人需要掌柜配合，且被发现风险极高；屋内无打斗也不支持伏击。',
+    'e-bolt': '正确。门栓完好是排除硬闯的直接物证。',
+    'e-window': '正确。窗台积灰是排除翻窗的直接物证。',
+    'e-bodies': '正确。倒在门前说明死者主动靠近了门。',
+    'e-arrival': '昨日才入住是背景信息，不能直接支撑"死者开门"这个推断。',
+    'stranger': '完全陌生的人在深夜敲门，壮汉不会毫无防备地开门。',
+    'familiar': '正确。无打斗、无求救声、两人倒在门前——都指向死者对来者没有戒心。',
+    'assassin': '武艺再高，强行突破门栓也会留痕迹，现场物证不支持此说。',
+    'correct': '正确。密室推理的核心不是机关，而是"谁能让人主动开门"。',
+    'wrong-1': '屋顶和地下通道的说法没有任何物证支持。',
+    'wrong-2': '掌柜是合理怀疑对象，但没有直接证据，且掌柜动机也未交代。',
+  },
+  evidenceFeedback: {
+    'bolt-intact': '关键证据。排除硬闯的核心物证，也是推断凶手身份的起点。',
+    'window-dust': '关键证据。与门栓合用，彻底封堵"外来硬闯"的可能。',
+    'bodies-at-door': '关键证据。死者走到门边这一事实，说明他们主动迎接来者。',
+    'clean-cut': '关键证据。单刀精准，无防御伤，说明凶手出手极快且死者毫无防备。',
+    'no-noise': '辅助证据。隔壁没有听到打斗声，印证了死者不设防的状态。',
+    'no-fight': '辅助证据。室内整洁印证了死者没来得及反抗。',
+    'two-victims': '背景信息。两名壮汉同时被杀，说明凶手要么武艺极高，要么死者完全不设防。',
+    'late-arrival': '误导证据。入住时间短容易让人以为凶手是随机路匪，但无法解释无打斗和开门问题。',
+  },
+  missingKeyEvidence: {
+    'bolt-intact': '你漏掉了"门栓完好无损"——没有这个证据，无法排除硬闯说。',
+    'bodies-at-door': '你漏掉了"两人倒在门前"——死者的位置是推断他们主动开门的关键。',
+    'clean-cut': '你漏掉了"咽喉单刀致命伤"——精准单刀才能说明死者完全未加防备。',
+  },
+  finalSummary: {
+    excellent: '大人逻辑严密：门窗排除硬闯，尸体位置推断开门，无声无打斗锁定熟人，密室推理完整闭环。',
+    partial: '大人找到了密室的关键，但"谁能让壮汉开门"这一步推断还不够完整。',
+    failed: '大人被"密室必有机关"的思路带偏，需要重新从"凶手如何进来"和"死者为何开门"两个问题重建推理。',
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 13 夜来的假钦差
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const evidenceList13: Evidence[] = [
+  {
+    id: 'wrong-boots',
+    title: '服靴不合千牛卫制度',
+    content: '来人所穿靴子与千牛卫标准制式不符，靴尖样式属于外卫而非内卫规制。',
+    role: 'key',
+    supports: ['fake-identity', 'uniform-error'],
+  },
+  {
+    id: 'accent-mismatch',
+    title: '口音与籍贯矛盾',
+    content: '自称关中籍贯，口音却带有明显的河东腔调，两者无法同时成立。',
+    role: 'key',
+    supports: ['fake-identity', 'identity-inconsistent'],
+  },
+  {
+    id: 'emperor-unaware',
+    title: '皇帝不知老臣在此',
+    content: '老臣此次途径绛帐并非公开行程，皇帝并不知晓其具体位置。',
+    role: 'key',
+    supports: ['impossible-edict', 'information-leak'],
+  },
+  {
+    id: 'edict-arrived',
+    title: '诏书却准确送到馆驿',
+    content: '既然皇帝不知老臣行踪，却有一份"皇帝圣旨"精准送达——这在逻辑上无法成立。',
+    role: 'key',
+    supports: ['impossible-edict', 'fake-identity'],
+  },
+  {
+    id: 'urgent-leave',
+    title: '来人急于催促离开',
+    content: '来人不停催促老臣立刻动身，不允许拖延，行事慌张，与正式宣旨礼仪不符。',
+    role: 'supporting',
+    supports: ['fake-identity', 'trap'],
+  },
+  {
+    id: 'night-arrival',
+    title: '深夜到访不合礼制',
+    content: '正式传旨应在白日公开进行，深夜密访本身就不符合朝廷礼制。',
+    role: 'supporting',
+    supports: ['fake-identity'],
+  },
+  {
+    id: 'edict-content',
+    title: '诏书内容合情合理',
+    content: '诏书所言事项并无明显破绽，内容符合当前朝局。',
+    role: 'decoy',
+    misleadsTo: ['real-edict'],
+  },
+];
+
+export const investigationNodes13: InvestigationNode[] = [
+  {
+    id: 'scene-uniform',
+    type: 'scene',
+    title: '仔细查看来人服制',
+    result: '来人所穿靴子靴尖式样与千牛卫标准制式不符，这是内卫与外卫的明显区别。',
+    cost: 1,
+    evidenceIds: ['wrong-boots'],
+    unlocks: ['witness-accent'],
+  },
+  {
+    id: 'witness-accent',
+    type: 'witness',
+    title: '与来人交谈，辨别口音',
+    result: '来人自称关中籍，却在交谈中露出河东腔调。两者无法同时成立。',
+    cost: 1,
+    requires: ['scene-uniform'],
+    evidenceIds: ['accent-mismatch'],
+  },
+  {
+    id: 'knowledge-route',
+    type: 'knowledge',
+    title: '确认老臣行程是否公开',
+    result: '老臣此次过境绛帐系临时决定，皇帝一侧并未收到通报。皇帝不可能知道老臣在此处。',
+    cost: 1,
+    evidenceIds: ['emperor-unaware'],
+    unlocks: ['deduce-edict'],
+  },
+  {
+    id: 'deduce-edict',
+    type: 'evidence',
+    title: '分析诏书送达的逻辑',
+    result: '皇帝不知老臣在此，却有圣旨精准送到——这不可能是真圣旨。诏书要么是伪造，要么是从提前掌握行踪的人手中发出。',
+    cost: 1,
+    requires: ['knowledge-route'],
+    evidenceIds: ['emperor-unaware', 'edict-arrived'],
+  },
+  {
+    id: 'scene-behavior',
+    type: 'scene',
+    title: '观察来人行事方式',
+    result: '来人深夜到访，不按宣旨礼仪进行，且不停催促立刻动身，神色慌张。',
+    cost: 1,
+    evidenceIds: ['urgent-leave', 'night-arrival'],
+  },
+  {
+    id: 'scene-edict',
+    type: 'evidence',
+    title: '查验诏书内容',
+    result: '诏书内容叙述合理，用词规范，表面看不出破绽。',
+    cost: 1,
+    evidenceIds: ['edict-content'],
+  },
+];
+
+export const deductionSteps13: DeductionStep[] = [
+  {
+    id: 'step-identity',
+    prompt: '根据服靴和口音，对来人身份最准确的判断是？',
+    type: 'single',
+    options: [
+      { id: 'real-guard', label: '是真千牛卫，只是着装不严谨' },
+      { id: 'fake-guard', label: '服制和口音均有破绽，身份可疑' },
+      { id: 'uncertain', label: '无法仅凭外貌判断' },
+    ],
+    correctOptionIds: ['fake-guard'],
+    requiredEvidenceIds: ['wrong-boots', 'accent-mismatch'],
+    maxScore: 2,
+  },
+  {
+    id: 'step-edict-logic',
+    prompt: '皇帝不知老臣在此，诏书却准确送达，这说明什么？',
+    type: 'single',
+    options: [
+      { id: 'spy-network', label: '皇帝有密探网络，能追踪臣子行踪' },
+      { id: 'impossible', label: '诏书不可能是真圣旨，来者掌握了老臣行踪却伪称奉旨' },
+      { id: 'coincidence', label: '纯属巧合，皇帝恰好派人路过此地' },
+    ],
+    correctOptionIds: ['impossible'],
+    requiredEvidenceIds: ['emperor-unaware', 'edict-arrived'],
+    maxScore: 3,
+  },
+  {
+    id: 'step-purpose',
+    prompt: '假钦差催促老臣深夜离开，目的最可能是？',
+    type: 'single',
+    options: [
+      { id: 'trap', label: '将老臣诱出馆驿，在路上伏击或控制' },
+      { id: 'message', label: '传递真实但非正式的紧急消息' },
+      { id: 'test', label: '测试老臣对圣旨的态度' },
+    ],
+    correctOptionIds: ['trap'],
+    requiredEvidenceIds: ['urgent-leave', 'emperor-unaware'],
+    maxScore: 2,
+  },
+  {
+    id: 'step-conclusion',
+    prompt: '综合所有证据，对本案最准确的定性是？',
+    type: 'single',
+    options: [
+      { id: 'correct', label: '这是一支假钦差，伪造圣旨，目的是将老臣诱离馆驿加以控制' },
+      { id: 'wrong-1', label: '钦差是真的，只是执行任务的是冒牌下属' },
+      { id: 'wrong-2', label: '诏书真假不明，但来人行为异常，应先按兵不动' },
+    ],
+    correctOptionIds: ['correct'],
+    requiredEvidenceIds: ['wrong-boots', 'accent-mismatch', 'emperor-unaware', 'edict-arrived'],
+    maxScore: 3,
+  },
+];
+
+export const feedback13: CaseFeedback = {
+  optionFeedback: {
+    'real-guard': '真千牛卫不可能在制式要求严格的场合穿错靴子，这不是"不严谨"，而是根本上的制度破绽。',
+    'fake-guard': '正确。服制和口音是两条独立破绽，缺一都不足够，两条同时成立才能确认身份可疑。',
+    'uncertain': '此时已有两条具体破绽，不是无法判断，而是"应该判断"。',
+    'spy-network': '皇帝密探网络的存在不能解释诏书送达的逻辑——即使有密探，也不会以圣旨名义传召。',
+    'impossible': '正确。这是本案推翻假钦差身份的逻辑核心：皇帝不知→诏书不可能准确送达→诏书是伪造的。',
+    'coincidence': '两名死者在馆驿一晚就碰到"路过的圣旨"，这不是巧合，是刻意布局。',
+    'trap': '正确。催促连夜离开是布局的最后一步——把人诱出安全环境。',
+    'message': '若是传递非正式消息，不需要伪造圣旨，直接派人传话即可。',
+    'test': '测试说无法解释服制和口音的破绽，也无法解释信息来源矛盾。',
+    'correct': '正确。身份推理的三重验证：制度细节（靴子）、身体特征（口音）、信息来源（行踪不公开）。',
+    'wrong-1': '钦差真假才是核心问题，不是下属真假——圣旨来源本身就无法成立。',
+    'wrong-2': '"按兵不动"是处置方式，不是推理结论；本案需要定性是否为假钦差。',
+  },
+  evidenceFeedback: {
+    'wrong-boots': '关键证据。制式破绽是最直接的身份验证手段，古代制服细节可当身份证。',
+    'accent-mismatch': '关键证据。口音与籍贯矛盾，说明来人在撒谎，这是第二道独立破绽。',
+    'emperor-unaware': '关键证据。这是推翻诏书真实性的逻辑前提。',
+    'edict-arrived': '关键证据。与"皇帝不知行踪"合用，才能推出"诏书不可能是真的"。',
+    'urgent-leave': '辅助证据。催促行为揭示了陷阱的目的——把人引出去。',
+    'night-arrival': '辅助证据。深夜传旨不合礼制，是额外的异常信号。',
+    'edict-content': '误导证据。内容合理只说明伪造者了解朝局，不能证明诏书为真。',
+  },
+  missingKeyEvidence: {
+    'wrong-boots': '你漏掉了"服靴不合千牛卫制度"——这是第一道可直接核对的身份破绽。',
+    'emperor-unaware': '你漏掉了"皇帝不知老臣在此"——没有这条，无法推翻诏书的合法性。',
+    'edict-arrived': '你漏掉了"诏书却准确送到馆驿"——这是与皇帝不知行踪合用的关键矛盾。',
+  },
+  finalSummary: {
+    excellent: '大人三重验证环环相扣：制式破绽→口音破绽→信息来源矛盾，身份推理做到了无懈可击。',
+    partial: '大人抓住了制度破绽，但"诏书送达本身不可能"这条逻辑链还没有完全展开。',
+    failed: '大人被诏书内容迷惑，需要从"皇帝是否知道行踪"这个问题重新出发。',
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 21 指南车下的吸铁石
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const evidenceList21: Evidence[] = [
+  {
+    id: 'magnet-found',
+    title: '指南车下发现吸铁石',
+    content: '勘查指南车底盘时，在靠近磁针机关的位置发现一块人为放置的吸铁石，与车体颜色不符。',
+    role: 'key',
+    supports: ['direction-tampered', 'sabotage'],
+  },
+  {
+    id: 'wrong-direction',
+    title: '实际路线偏向北方伏击圈',
+    content: '军队按指南车指示行进，却逐渐偏离预定南行路线，进入北方的狭窄谷地伏击圈。',
+    role: 'key',
+    supports: ['direction-tampered', 'trap'],
+  },
+  {
+    id: 'had-map',
+    title: '军中备有地图',
+    content: '军中随行有地形图，正常情况下地图与指南车互相校验，不应迷路。',
+    role: 'key',
+    supports: ['natural-error-excluded', 'sabotage'],
+  },
+  {
+    id: 'magnet-interferes',
+    title: '磁石可干扰磁针方向',
+    content: '铁石磁性会使磁针偏转，导致指南车指示方向与真实方向产生固定偏差。',
+    role: 'key',
+    supports: ['direction-tampered', 'sabotage'],
+  },
+  {
+    id: 'ambush-circle',
+    title: '伏击圈显然早有准备',
+    content: '伏击圈内敌军埋伏整齐，说明对方预知了军队的路线，不是偶然遭遇。',
+    role: 'supporting',
+    supports: ['trap', 'insider'],
+  },
+  {
+    id: 'new-route',
+    title: '出发前曾更改行军路线',
+    content: '原定路线出发前一日临时更改，知情者范围极小。',
+    role: 'supporting',
+    supports: ['insider', 'sabotage'],
+  },
+  {
+    id: 'terrain-error',
+    title: '谷地地形复杂易迷路',
+    content: '该区域山谷地形确实复杂，历史上有部队自然迷路的记录。',
+    role: 'decoy',
+    misleadsTo: ['natural-confusion'],
+  },
+];
+
+export const investigationNodes21: InvestigationNode[] = [
+  {
+    id: 'scene-compass',
+    type: 'scene',
+    title: '检查指南车底盘与磁针机关',
+    result: '指南车底部靠近磁针处有一块外来铁石，颜色和材质与车体明显不同，显然是后来放入的。',
+    cost: 1,
+    evidenceIds: ['magnet-found'],
+    unlocks: ['knowledge-magnet'],
+  },
+  {
+    id: 'knowledge-magnet',
+    type: 'knowledge',
+    title: '验证磁石对磁针的影响',
+    result: '用铁石靠近磁针，磁针立刻偏转。磁石放置位置固定，可产生稳定的方向偏差，让军队按错误方向行进。',
+    cost: 1,
+    requires: ['scene-compass'],
+    evidenceIds: ['magnet-interferes'],
+  },
+  {
+    id: 'scene-route',
+    type: 'scene',
+    title: '复盘实际行军路线',
+    result: '将实际路线画在地图上，军队走的方向与正确南行路线相差约四十度，恰好指向北方谷地。',
+    cost: 1,
+    evidenceIds: ['wrong-direction', 'had-map'],
+    unlocks: ['deduce-sabotage'],
+  },
+  {
+    id: 'deduce-sabotage',
+    type: 'evidence',
+    title: '分析地图与指南车的矛盾',
+    result: '军中有地图，正常导航应互相校验。如果两者同时失效，说明有人刻意破坏工具；如果只有指南车失效，说明吸铁石是蓄意放置的，而非自然误差。',
+    cost: 1,
+    requires: ['scene-route'],
+    evidenceIds: ['had-map', 'magnet-found'],
+  },
+  {
+    id: 'witness-ambush',
+    type: 'witness',
+    title: '询问侦察兵：伏击圈情况',
+    result: '伏击圈内敌军阵列整齐，显然等候多时，不是偶然遭遇。对方必定事先知道我军会走这条路。',
+    cost: 1,
+    evidenceIds: ['ambush-circle'],
+    unlocks: ['witness-route-change'],
+  },
+  {
+    id: 'witness-route-change',
+    type: 'witness',
+    title: '追问：行军路线是否临时更改',
+    result: '行军路线出发前一日曾更改，知情者仅限将领数人。路线泄露说明内部有问题。',
+    cost: 1,
+    requires: ['witness-ambush'],
+    evidenceIds: ['new-route'],
+  },
+];
+
+export const deductionSteps21: DeductionStep[] = [
+  {
+    id: 'step-cause',
+    prompt: '军队有地图和指南车仍走错方向，最可能的原因是什么？',
+    type: 'single',
+    options: [
+      { id: 'natural', label: '地形复杂，导致自然迷路' },
+      { id: 'tampered', label: '指南车被人为干扰，指示方向出错' },
+      { id: 'map-wrong', label: '地图本身绘制错误' },
+    ],
+    correctOptionIds: ['tampered'],
+    requiredEvidenceIds: ['magnet-found', 'had-map', 'magnet-interferes'],
+    maxScore: 3,
+  },
+  {
+    id: 'step-mechanism',
+    prompt: '吸铁石如何导致军队走向伏击圈？',
+    type: 'multi',
+    options: [
+      { id: 'm1', label: '吸铁石放置在指南车磁针附近' },
+      { id: 'm2', label: '磁石磁性让磁针产生固定偏差' },
+      { id: 'm3', label: '军队按偏差后的方向行进' },
+      { id: 'm4', label: '吸铁石被风吹落恰好偏转方向' },
+    ],
+    correctOptionIds: ['m1', 'm2', 'm3'],
+    requiredEvidenceIds: ['magnet-found', 'magnet-interferes'],
+    maxScore: 2,
+  },
+  {
+    id: 'step-insider',
+    prompt: '伏击圈敌军等候多时，且路线曾临时更改，这说明什么？',
+    type: 'single',
+    options: [
+      { id: 'leak', label: '军中有内奸，路线和指南车被同一伙人布局' },
+      { id: 'coincidence', label: '伏击圈是敌方惯用据点，纯属巧合' },
+      { id: 'spy-outside', label: '敌方有外部侦察，发现了军队行进方向' },
+    ],
+    correctOptionIds: ['leak'],
+    requiredEvidenceIds: ['ambush-circle', 'new-route'],
+    maxScore: 2,
+  },
+  {
+    id: 'step-conclusion',
+    prompt: '综合以上推断，对本案最准确的定性是？',
+    type: 'single',
+    options: [
+      { id: 'correct', label: '有人在指南车下放置吸铁石，使军队按错误方向进入伏击圈；结合路线泄露，疑有内奸配合' },
+      { id: 'wrong-1', label: '军队因地形复杂迷路，恰好进入敌方据点' },
+      { id: 'wrong-2', label: '指南车制造缺陷，与敌方无关' },
+    ],
+    correctOptionIds: ['correct'],
+    requiredEvidenceIds: ['magnet-found', 'magnet-interferes', 'wrong-direction', 'ambush-circle'],
+    maxScore: 3,
+  },
+];
+
+export const feedback21: CaseFeedback = {
+  optionFeedback: {
+    'natural': '军中同时有地图和指南车互相校验，自然迷路的可能性极低；且谷地地形确实复杂只是背景，不能解释吸铁石的存在。',
+    'tampered': '正确。指南车下有吸铁石是直接物证，这不是猜测而是确凿证据。',
+    'map-wrong': '地图可以核对，且实际偏差方向规律固定，不像随机绘制错误。',
+    'm1': '正确。位置决定了磁石能影响磁针。',
+    'm2': '正确。这是干扰有效的物理原理。',
+    'm3': '正确。这是军队被引入错误路线的最终环节。',
+    'm4': '吸铁石是人为放置，不是偶然滚落；且偶然因素无法解释方向偏差的规律性。',
+    'leak': '正确。两条独立证据指向同一结论：路线被人知晓（临时更改仍被泄露）+ 指南车被人动手脚。',
+    'coincidence': '伏击圈整齐等候本身就排除了巧合，敌方必然事先知道路线。',
+    'spy-outside': '外部侦察无法解释指南车下的吸铁石——这需要有人进入军中布置。',
+    'correct': '正确。机关诡计案的核心：工具被污染→方向被操控→陷阱提前布置，三环缺一不可。',
+    'wrong-1': '吸铁石是人为放置的铁证，无法用"巧合迷路"解释。',
+    'wrong-2': '制造缺陷不会导致磁针被外来铁石偏转，且铁石明显是外来物。',
+  },
+  evidenceFeedback: {
+    'magnet-found': '关键证据。指南车下的吸铁石是本案最直接的物证，直接证明工具被人为篡改。',
+    'wrong-direction': '关键证据。实际路线偏差是结果，与磁石发现合用才能建立完整因果链。',
+    'had-map': '关键证据。有地图还走错，说明不是普通迷路，工具被篡改是唯一解释。',
+    'magnet-interferes': '关键证据。磁石干扰磁针的原理是本案机关的核心知识。',
+    'ambush-circle': '辅助证据。提前等候说明情报泄露，指向内奸配合。',
+    'new-route': '辅助证据。临时更改路线仍被泄露，缩小了内奸范围。',
+    'terrain-error': '误导证据。地形复杂只是背景，不能解释吸铁石的存在和伏击圈的有备而来。',
+  },
+  missingKeyEvidence: {
+    'magnet-found': '你漏掉了"指南车下发现吸铁石"——这是证明工具被篡改的直接物证。',
+    'magnet-interferes': '你漏掉了"磁石可干扰磁针方向"——没有这个原理，无法解释磁石如何导致路线偏差。',
+    'had-map': '你漏掉了"军中备有地图"——这条证据说明同时有地图仍走错，自然迷路说无法成立。',
+  },
+  finalSummary: {
+    excellent: '大人思路清晰：物证（磁石）→原理（干扰偏转）→结果（路线错误）→内奸（路线泄露），机关诡计推理环环相扣。',
+    partial: '大人发现了磁石，但路线泄露和内奸配合这条线还没有完整展开。',
+    failed: '大人被"地形复杂"这一背景信息误导，需要以"有导航还走错"为起点重建推理。',
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 25 三句遗言
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const evidenceList25: Evidence[] = [
+  {
+    id: 'three-words',
+    title: '三个遗言碎片',
+    content: '萧娘临死前只说了三组词：黑暗之山、大地动、饷银。三者必须能组成一个因果句才有意义。',
+    role: 'key',
+    supports: ['syntax-key', 'cause-chain'],
+  },
+  {
+    id: 'quake-happened',
+    title: '地动确实发生过',
+    content: '当地近期确有地震，此乃公开事实，百姓皆知。',
+    role: 'key',
+    supports: ['quake-real', 'exploit-quake'],
+  },
+  {
+    id: 'quake-not-manmade',
+    title: '人力无法制造真正的地动',
+    content: '古代技术不可能人工引发真正的地震，遗言中的"地动"只能是利用已发生的地震，而非制造地震。',
+    role: 'key',
+    supports: ['syntax-key', 'exploit-quake'],
+  },
+  {
+    id: 'token-on-body',
+    title: '萧娘身上有信物',
+    content: '萧娘身上带有一枚与某势力相关的信物，说明她听到或亲历了某件核心秘事。',
+    role: 'key',
+    supports: ['xiao-knew', 'silenced'],
+  },
+  {
+    id: 'low-status',
+    title: '丫鬟身份低微',
+    content: '萧娘是普通丫鬟，无权无势，却遭追杀，说明她掌握了危险信息而非危险身份。',
+    role: 'supporting',
+    supports: ['xiao-knew', 'silenced'],
+  },
+  {
+    id: 'dark-mountain',
+    title: '"黑暗之山"可指黑山地区',
+    content: '"黑暗之山"在古语中可指代"黑山"地区，该地有一支山地力量活动。',
+    role: 'supporting',
+    supports: ['cause-chain'],
+  },
+  {
+    id: 'rations-moved',
+    title: '饷银运输近期出过意外',
+    content: '当地军饷运输队近期在地动期间曾遭遇"意外"，损失不明。',
+    role: 'supporting',
+    supports: ['exploit-quake', 'cause-chain'],
+  },
+  {
+    id: 'supernatural-read',
+    title: '"大地动"被解读为神意',
+    content: '当地有人将地动解读为上天示警，引发民间恐慌。',
+    role: 'decoy',
+    misleadsTo: ['supernatural-cause'],
+  },
+];
+
+export const investigationNodes25: InvestigationNode[] = [
+  {
+    id: 'scene-words',
+    type: 'evidence',
+    title: '逐字分析三个遗言碎片',
+    result: '三个碎片：黑暗之山（地点/势力）、大地动（事件）、饷银（目标）。三者必须能组成逻辑因果链：谁在什么时机做了什么事。',
+    cost: 1,
+    evidenceIds: ['three-words'],
+    unlocks: ['knowledge-quake'],
+  },
+  {
+    id: 'knowledge-quake',
+    type: 'knowledge',
+    title: '核查地动是否真实发生',
+    result: '当地近期确有地震，是公开事实。但人力不可能人工引发真正地震——遗言里的"地动"只能是"利用地动"，不是"制造地动"。',
+    cost: 1,
+    requires: ['scene-words'],
+    evidenceIds: ['quake-happened', 'quake-not-manmade'],
+    unlocks: ['deduce-syntax'],
+  },
+  {
+    id: 'deduce-syntax',
+    type: 'evidence',
+    title: '尝试三种组合句法',
+    result: '排除"引发地动"（人力不可能）；排除"知道地动"（无法解释饷银）；只有"利用地动劫饷"能同时解释三个词：黑暗之山利用地动劫了饷银。',
+    cost: 1,
+    requires: ['knowledge-quake'],
+    evidenceIds: ['three-words', 'quake-not-manmade'],
+  },
+  {
+    id: 'scene-body',
+    type: 'scene',
+    title: '检查萧娘遗物',
+    result: '萧娘身上有一枚铜牌，纹样与黑山势力相关联。她一个普通丫鬟，不应持有此物，说明她目睹或听到了某件核心秘事。',
+    cost: 1,
+    evidenceIds: ['token-on-body', 'low-status'],
+    unlocks: ['witness-rations'],
+  },
+  {
+    id: 'witness-rations',
+    type: 'witness',
+    title: '查询饷银运输记录',
+    result: '地动发生当日，军饷运输队恰好在路上，事后上报为"意外损失"，但金额与实际差异过大，疑似被劫。',
+    cost: 1,
+    requires: ['scene-body'],
+    evidenceIds: ['rations-moved'],
+  },
+  {
+    id: 'knowledge-mountain',
+    type: 'knowledge',
+    title: '考证"黑暗之山"的指代',
+    result: '"黑暗之山"古语可指"黑山"，该地有一支善于利用山地和混乱的武装力量，历史上曾多次在动荡时机劫持官方物资。',
+    cost: 1,
+    evidenceIds: ['dark-mountain'],
+  },
+];
+
+export const deductionSteps25: DeductionStep[] = [
+  {
+    id: 'step-exclude',
+    prompt: '"大地动"在遗言中最合理的解读是？',
+    type: 'single',
+    options: [
+      { id: 'cause', label: '"黑暗之山"引发了地动（主动制造）' },
+      { id: 'know', label: '"黑暗之山"知道地动将要发生（预知）' },
+      { id: 'exploit', label: '"黑暗之山"利用地动制造混乱，趁机行事' },
+    ],
+    correctOptionIds: ['exploit'],
+    requiredEvidenceIds: ['quake-not-manmade', 'quake-happened'],
+    maxScore: 3,
+  },
+  {
+    id: 'step-syntax',
+    prompt: '能同时解释"黑暗之山+大地动+饷银"三者关系的唯一句法是？',
+    type: 'single',
+    options: [
+      { id: 'correct-syntax', label: '黑暗之山趁大地动之乱，劫走了饷银' },
+      { id: 'wrong-syntax-1', label: '大地动摧毁了饷银库，黑暗之山乘机逃走' },
+      { id: 'wrong-syntax-2', label: '饷银与地动无关，黑暗之山是萧娘的出生地' },
+    ],
+    correctOptionIds: ['correct-syntax'],
+    requiredEvidenceIds: ['three-words', 'quake-not-manmade', 'rations-moved'],
+    maxScore: 3,
+  },
+  {
+    id: 'step-xiao',
+    prompt: '萧娘为何会被追杀？',
+    type: 'single',
+    options: [
+      { id: 'witness', label: '她目睹或听闻了劫饷秘密，成为灭口对象' },
+      { id: 'participant', label: '她是劫饷的参与者，因分赃不均被杀' },
+      { id: 'mistaken', label: '她被误认为持有与劫饷有关的文件' },
+    ],
+    correctOptionIds: ['witness'],
+    requiredEvidenceIds: ['token-on-body', 'low-status'],
+    maxScore: 2,
+  },
+  {
+    id: 'step-conclusion',
+    prompt: '根据三句遗言，最完整的推理结论是？',
+    type: 'single',
+    options: [
+      { id: 'correct', label: '黑山势力利用地动造成的混乱劫走饷银；萧娘因目睹或听闻此事而被灭口' },
+      { id: 'wrong-1', label: '地动是神意，饷银被天灾损毁，萧娘是无辜受害者' },
+      { id: 'wrong-2', label: '黑山势力制造了地动，借此达到政治目的，饷银是副产品' },
+    ],
+    correctOptionIds: ['correct'],
+    requiredEvidenceIds: ['three-words', 'quake-not-manmade', 'token-on-body', 'rations-moved'],
+    maxScore: 2,
+  },
+];
+
+export const feedback25: CaseFeedback = {
+  optionFeedback: {
+    'cause': '人力无法制造真正的地震，这个读法可以直接排除。',
+    'know': '"知道地动"无法解释"饷银"出现在遗言中，三词必须能组成完整因果链。',
+    'exploit': '正确。利用地动是唯一既符合"人力上限"又能串联三个词的读法。',
+    'correct-syntax': '正确。这是唯一能让三个词各司其职、构成完整因果链的句法。',
+    'wrong-syntax-1': '地动摧毁饷银库不需要"黑暗之山"出现在遗言里；且地动不能被人主动摧毁。',
+    'wrong-syntax-2': '把黑暗之山解读为地名而非势力，无法解释萧娘为何被追杀。',
+    'witness': '正确。信物和低微身份合用，说明她知道了不该知道的事，而非本身是危险人物。',
+    'participant': '参与者被杀通常是内部矛盾，但信物和低微身份不支持萧娘是主动参与者。',
+    'mistaken': '误杀说无法解释她身上的铜牌信物为何存在。',
+    'correct': '正确。文字谜案的核心：穷举句法→排除不可能→锁定唯一合理读法。',
+    'wrong-1': '神意说无法解释劫饷行为和萧娘被追杀，绕过了遗言中的具体指向。',
+    'wrong-2': '制造地动已被排除；此选项是"利用地动"和"制造地动"的混淆。',
+  },
+  evidenceFeedback: {
+    'three-words': '关键证据。三个词必须组成因果链，这是整个文字谜推理的起点和框架。',
+    'quake-happened': '关键证据。地动是真实发生的事，才能被利用；否则整条推理链都不成立。',
+    'quake-not-manmade': '关键证据。排除"制造地动"读法的核心依据，迫使玩家转向"利用地动"。',
+    'token-on-body': '关键证据。信物是证明萧娘掌握核心信息的直接物证。',
+    'low-status': '辅助证据。低微身份说明她的危险来自所知而非所是。',
+    'dark-mountain': '辅助证据。帮助确认"黑暗之山"的指代，但不是推理的核心逻辑。',
+    'rations-moved': '辅助证据。饷银损失的记录印证了"劫饷"这一推论。',
+    'supernatural-read': '误导证据。神意解读是民间传言，会让玩家绕过因果逻辑直接接受玄学解释。',
+  },
+  missingKeyEvidence: {
+    'three-words': '你漏掉了对三个词逐一分析的过程——遗言推理必须先明确每个词的语法功能。',
+    'quake-not-manmade': '你漏掉了"人力无法制造地动"——没有这条，无法排除最大的误导读法。',
+    'token-on-body': '你漏掉了"萧娘身上的信物"——这是证明她掌握核心秘密的关键物证。',
+  },
+  finalSummary: {
+    excellent: '大人逻辑严密：先排除不可能的读法，再用因果链锁定唯一答案，文字谜推理做到了穷举与排除。',
+    partial: '大人找到了"利用地动"这个方向，但萧娘为何被杀这条辅助线还没有完整交代。',
+    failed: '大人被"神意"或"制造地动"等误导读法带偏，需要从"人力能做什么"这一约束重新出发。',
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 阅卷初判选项
 // ─────────────────────────────────────────────────────────────────────────────
+
+const initialHypotheses04 = [
+  { id: 'daytime', label: '案发在日间，凶手趁官道混乱作案', feedback: '日间官道车来车往，车辙会持续被覆盖——死者车辙清晰未被覆盖，说明案发后无车经过，这与日间说矛盾。' },
+  { id: 'night-window', label: '案发在闭城后的夜间空窗期，死者有特殊身份', feedback: '初判与真相一致。关键在于把车辙覆盖关系和城门制度联动起来，推出唯一的时间窗口。' },
+  { id: 'unsure', label: '路人偶发袭击，时间难以确定', feedback: '偶发袭击说无法解释死者在闭城后仍朝城门方向赶路这一反常行为，需要深入调查。' },
+];
+
+const initialHypotheses07 = [
+  { id: 'mechanism', label: '凶手通过某种机关或暗道进入密室', feedback: '机关和暗道是密室故事的常见预设，但此案门窗无痕、客栈结构简单，物证不支持这一方向。' },
+  { id: 'victim-opened', label: '死者自己开了门，凶手趁机杀人', feedback: '初判与真相一致。门栓完好+两人倒在门边，这两条物证合用才能推出这个结论。' },
+  { id: 'innkeeper', label: '掌柜或店内人员是凶手', feedback: '店内人员是合理怀疑方向，但不能从"谁是凶手"出发倒推，应先确认"凶手如何进入"。' },
+];
+
+const initialHypotheses13 = [
+  { id: 'real', label: '钦差是真的，但执行时出了差错', feedback: '真钦差有制度保障，不会服靴错误；且皇帝根本不知道老臣在绛帐，真圣旨不可能送到这里。' },
+  { id: 'fake', label: '这是一伙假钦差，目的是将老臣诱离馆驿', feedback: '初判与真相一致。三重破绽（靴子、口音、行踪矛盾）缺一都不算完整证明，需要逐一核实。' },
+  { id: 'unsure', label: '来人身份可疑，但无法确定真假', feedback: '保持怀疑是对的，但现场已有足够的制度细节可以核对，不应止步于"可疑"。' },
+];
+
+const initialHypotheses21 = [
+  { id: 'terrain', label: '地形复杂，军队自然迷路进入伏击圈', feedback: '军中同时有地图和指南车，自然迷路的可能性很低；且指南车下有吸铁石这一物证无法被"地形复杂"解释。' },
+  { id: 'tampered', label: '指南车被人为干扰，是有计划的陷阱', feedback: '初判与真相一致。物证（磁石）→原理（偏转）→结果（走错路）→内奸（路线泄露），推理链要完整展开。' },
+  { id: 'intel-leak', label: '军队路线情报被泄露，敌方提前布置伏击', feedback: '情报泄露是本案一部分，但单靠情报泄露无法解释军队为何按错误方向走——还需要解释指南车的问题。' },
+];
+
+const initialHypotheses25 = [
+  { id: 'supernatural', label: '"大地动"是神意，黑暗之山是宗教势力', feedback: '神意解读绕过了因果逻辑——遗言三个词必须能组成一个具体的因果句，而非玄学符号。' },
+  { id: 'exploit-quake', label: '某势力利用地动制造的混乱劫走了饷银，萧娘因知情被灭口', feedback: '初判与真相一致。关键在于排除"制造地动"（人力不可能），才能锁定"利用地动"这个唯一合理读法。' },
+  { id: 'unrelated', label: '三个词各自独立，不是同一件事', feedback: '临死遗言通常指向同一件最重要的事——把三个词拆开理解，会失去遗言的推理价值。' },
+];
 
 const initialHypotheses01 = [
   { id: 'suicide', label: '赵氏自缢身亡', feedback: '初判自杀，但后续调查发现尸身与现场多处矛盾，说明直觉可能受到了表面布局的干扰。' },
@@ -679,5 +1766,45 @@ export const caseExtensions: Record<string, {
     feedback: feedback09,
     actionPointLimit: 5,  // 共7个节点（含3个追问），高阶案压力更大
     initialHypotheses: initialHypotheses09,
+  },
+  '04': {
+    evidenceList: evidenceList04,
+    investigationNodes: investigationNodes04,
+    deductionSteps: deductionSteps04,
+    feedback: feedback04,
+    actionPointLimit: 5,  // 共7个节点（含2个追问），进阶案中等压力
+    initialHypotheses: initialHypotheses04,
+  },
+  '07': {
+    evidenceList: evidenceList07,
+    investigationNodes: investigationNodes07,
+    deductionSteps: deductionSteps07,
+    feedback: feedback07,
+    actionPointLimit: 5,  // 共7个节点（含2个追问），进阶密室案
+    initialHypotheses: initialHypotheses07,
+  },
+  '13': {
+    evidenceList: evidenceList13,
+    investigationNodes: investigationNodes13,
+    deductionSteps: deductionSteps13,
+    feedback: feedback13,
+    actionPointLimit: 5,  // 共6个节点（含1个追问），入门身份案
+    initialHypotheses: initialHypotheses13,
+  },
+  '21': {
+    evidenceList: evidenceList21,
+    investigationNodes: investigationNodes21,
+    deductionSteps: deductionSteps21,
+    feedback: feedback21,
+    actionPointLimit: 5,  // 共6个节点（含1个追问），入门机关案
+    initialHypotheses: initialHypotheses21,
+  },
+  '25': {
+    evidenceList: evidenceList25,
+    investigationNodes: investigationNodes25,
+    deductionSteps: deductionSteps25,
+    feedback: feedback25,
+    actionPointLimit: 5,  // 共6个节点（含1个追问），进阶文字谜
+    initialHypotheses: initialHypotheses25,
   },
 };
