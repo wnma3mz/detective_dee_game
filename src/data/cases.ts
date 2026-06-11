@@ -868,5 +868,7 @@ export const cases: DetectiveCase[] = seeds.map((seed) => {
     investigationNodes: ext.investigationNodes,
     deductionSteps: ext.deductionSteps,
     feedback: ext.feedback,
+    actionPointLimit: ext.actionPointLimit,
+    initialHypotheses: ext.initialHypotheses,
   };
 });

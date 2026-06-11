@@ -971,3 +971,124 @@ textarea:focus {
   color: var(--text-muted);
   border: 1px dashed var(--text-muted);
 }
+
+/* ── 行动点系统 ───────────────────────────────────────────────────────────── */
+
+.action-points-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(184, 142, 70, 0.06);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin-bottom: 1.25rem;
+  font-size: 0.88rem;
+}
+
+.action-points-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.action-points-pips {
+  display: flex;
+  gap: 5px;
+  flex: 1;
+}
+
+.pip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(194, 157, 91, 0.25);
+  border: 1px solid var(--border-color-strong);
+  transition: background 0.2s;
+}
+
+.pip.used {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+.action-points-remain {
+  color: var(--accent-gold);
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.action-points-remain.exhausted {
+  color: var(--accent-red);
+}
+
+.action-card.locked-out {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ── 阅卷初判 ────────────────────────────────────────────────────────────── */
+
+.initial-hypothesis-block {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+.initial-hypothesis-title {
+  color: var(--accent-gold);
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin: 0 0 0.4rem 0;
+}
+
+.initial-hypothesis-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0 0 1rem 0;
+}
+
+/* ── 初判复盘对比 ─────────────────────────────────────────────────────────── */
+
+.hypothesis-review {
+  margin-top: 1.5rem;
+  padding: 1rem 1.2rem;
+  background: rgba(194, 157, 91, 0.05);
+  border: 1px solid var(--border-color-strong);
+  border-radius: 6px;
+}
+
+.hypothesis-review-title {
+  color: var(--accent-gold);
+  font-size: 0.9rem;
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.75rem 0;
+}
+
+.hypothesis-review-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.hypothesis-review-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  min-width: 4.5em;
+}
+
+.hypothesis-review-value {
+  color: var(--text-main);
+}
+
+.hypothesis-review-feedback {
+  margin-top: 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  padding-left: 0.2rem;
+  border-left: 2px solid var(--border-color-strong);
+  padding-left: 0.75rem;
+}

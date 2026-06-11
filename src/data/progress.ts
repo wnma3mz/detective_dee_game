@@ -16,6 +16,8 @@ export function createEmptyProgress(gameCase: DetectiveCase): CaseProgress {
     // 新字段
     unlockedNodeIds: [],
     deductionAnswers: {},
+    actionPointsSpent: 0,
+    initialHypothesisId: '',
   };
 }
 
@@ -49,18 +51,23 @@ export function calculateScore(gameCase: DetectiveCase, progress: CaseProgress):
       const correct = step.correctOptionIds ?? [];
       const maxScore = step.maxScore ?? 2;
 
+      // 检查该步骤要求的证据是否已被玩家选择
+      const requiredEvidenceIds = step.requiredEvidenceIds ?? [];
+      const evidenceCovered =
+        requiredEvidenceIds.length === 0 ||
+        requiredEvidenceIds.some((eid) => progress.selectedEvidenceIds.includes(eid));
+      const evidenceMultiplier = evidenceCovered ? 1 : 0.6;
+
       if (step.type === 'text') {
-        // 有内容就给分
-        if (answers[0]?.trim()) total += maxScore;
+        if (answers[0]?.trim()) total += maxScore * evidenceMultiplier;
       } else if (step.type === 'single') {
-        if (correct.length > 0 && answers[0] === correct[0]) total += maxScore;
+        if (correct.length > 0 && answers[0] === correct[0]) total += maxScore * evidenceMultiplier;
       } else if (step.type === 'multi') {
-        const ansSet = new Set(answers);
         const correctSet = new Set(correct);
         const hits = answers.filter((a) => correctSet.has(a)).length;
         const wrong = answers.filter((a) => !correctSet.has(a)).length;
         const raw = (hits / Math.max(correctSet.size, 1)) * maxScore - wrong * 0.5;
-        total += Math.max(0, raw);
+        total += Math.max(0, raw) * evidenceMultiplier;
       }
     }
 

@@ -56,6 +56,13 @@ export const evidenceList01: Evidence[] = [
     role: 'decoy',
     misleadsTo: ['suicide'],
   },
+  {
+    id: 'suspect-had-time',
+    title: '周二提前回家',
+    content: '邻人证实周二傍晚回家时间比他声称的早了半个时辰，有充足时间布置现场。',
+    role: 'key',
+    supports: ['scene-staged', 'suspect-involved'],
+  },
 ];
 
 export const investigationNodes01: InvestigationNode[] = [
@@ -157,9 +164,9 @@ export const deductionSteps01: DeductionStep[] = [
       { id: 'neck-scratch', label: '周二脖颈抓痕——与赵氏挣扎可互相印证' },
       { id: 'hoe-neat', label: '锄头立得端正——说明有人从容整理过现场' },
       { id: 'old-rope', label: '白绫是旧物——家中常备，可事先备好' },
-      { id: 'zhou-contradict', label: '周二口供前后矛盾——"吓坏了"却还整理了锄头' },
+      { id: 'suspect-speech', label: '周二口供前后矛盾——"吓坏了"却还整理了锄头' },
     ],
-    correctOptionIds: ['torn-clothes', 'neck-scratch', 'hoe-neat', 'zhou-contradict'],
+    correctOptionIds: ['torn-clothes', 'neck-scratch', 'hoe-neat', 'suspect-speech'],
     maxScore: 3,
   },
   {
@@ -196,6 +203,7 @@ export const feedback01: CaseFeedback = {
     'hoe-neat': '关键证据。锄头被端正立好，说明周二有时间从容布置，与"吓坏了"矛盾。',
     'suspect-speech': '辅助证据。口供前后矛盾加强了对周二的怀疑，但不能单独定案。',
     'old-rope': '误导证据。白绫是旧物只说明随手可取，自尽和伪装都可以用旧绳，无法区分。',
+    'suspect-had-time': '关键证据。周二提前回家说明他有足够时间布置现场，直接推翻"吓坏了"的说法。',
   },
   missingKeyEvidence: {
     'feet-distance': '你漏掉了"双脚离板凳过远"——这是推翻自尽最直接的物理矛盾。',
@@ -385,6 +393,8 @@ export const feedback02: CaseFeedback = {
     'gift-small': '贡礼价值是否够高是主观判断，不如"留活口却继续冒险"这个逻辑矛盾更直接。',
     'survivor-risk': '正确。为了钱不该这样冒险，说明目的不在赏赐。',
     'no-escape-3': '不逃走有多种解释（还有后续任务、出城被封），不如"留活口"矛盾更尖锐。',
+    'timeline-match': '正确。假使团进京次日窑场即起火，时间高度吻合，说明进京就是为了窑场。',
+    'diplomatic-gift': '贡礼的存在支持赏赐动机，但无法解释后续连续冒险，它是误导线索。',
     truth: '正确。三条证据——禁军守窑、手帕指向、时间吻合——共同支撑这个结论。',
     'decoy-1': '挑起战火无需进京，凶手冒险假冒使团的动作说明目标在京城内部。',
     'decoy-2': '窑场火案与假使团进京在时间上高度吻合，且手帕直接指向同一伙人，不是巧合。',
@@ -613,6 +623,28 @@ export const feedback09: CaseFeedback = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 阅卷初判选项
+// ─────────────────────────────────────────────────────────────────────────────
+
+const initialHypotheses01 = [
+  { id: 'suicide', label: '赵氏自缢身亡', feedback: '初判自杀，但后续调查发现尸身与现场多处矛盾，说明直觉可能受到了表面布局的干扰。' },
+  { id: 'murder', label: '赵氏被人杀害后伪装成自杀', feedback: '初判他杀，与最终真相一致。后续调查只需收集足够证据支撑这一判断。' },
+  { id: 'unsure', label: '暂时无法判断，需勘查才能确定', feedback: '保持开放态度不失稳妥，但现场已有多处疑点——"疑点"本身就是信号。' },
+];
+
+const initialHypotheses02 = [
+  { id: 'war', label: '假使团的目的是挑起战乱', feedback: '战争动机看似有道理，但后续调查发现假使团行事更精准——他们的目标另有所图。' },
+  { id: 'kiln', label: '假使团进京是为了旧窑场里的秘密', feedback: '初判与最终真相一致。调查中需要找出窑场和假使团之间的直接联系来支撑这一判断。' },
+  { id: 'bribe', label: '假使团是为了贿赂官员，购买情报', feedback: '行贿动机有一定合理性，但无法解释窑场火案和留活口等反常行为，说明动机判断还不够准确。' },
+];
+
+const initialHypotheses09 = [
+  { id: 'sun-guilty', label: '孙喜旺就是凶手，左手血印是铁证', feedback: '左手血印是最显眼的物证，初判孙喜旺很自然。但"物证出现在哪里"比"物证属于谁"更重要，需要深入调查。' },
+  { id: 'third-party', label: '有第三人趁黑暗行凶并嫁祸孙喜旺', feedback: '初判与最终真相一致。黑暗、无防御、血印位置可疑——三点联动才能证明这是一起嫁祸案。' },
+  { id: 'accident', label: '可能是意外或严氏自己造成的伤亡', feedback: '意外说无法解释人为熄灭的风灯，以及剪刀上反常的外圈血印，需要重新审视现场。' },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 扩展数据索引，供 cases.ts 合并
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -621,23 +653,31 @@ export const caseExtensions: Record<string, {
   investigationNodes: InvestigationNode[];
   deductionSteps: DeductionStep[];
   feedback: CaseFeedback;
+  actionPointLimit: number;
+  initialHypotheses: { id: string; label: string; feedback: string }[];
 }> = {
   '01': {
     evidenceList: evidenceList01,
     investigationNodes: investigationNodes01,
     deductionSteps: deductionSteps01,
     feedback: feedback01,
+    actionPointLimit: 6,  // 共7个节点（含2个追问），留有压力但不至于绝路
+    initialHypotheses: initialHypotheses01,
   },
   '02': {
     evidenceList: evidenceList02,
     investigationNodes: investigationNodes02,
     deductionSteps: deductionSteps02,
     feedback: feedback02,
+    actionPointLimit: 6,  // 共7个节点（含2个追问），需要取舍
+    initialHypotheses: initialHypotheses02,
   },
   '09': {
     evidenceList: evidenceList09,
     investigationNodes: investigationNodes09,
     deductionSteps: deductionSteps09,
     feedback: feedback09,
+    actionPointLimit: 5,  // 共7个节点（含3个追问），高阶案压力更大
+    initialHypotheses: initialHypotheses09,
   },
 };

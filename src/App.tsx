@@ -18,6 +18,7 @@ import {
   BookMarked,
   XCircle,
   MinusCircle,
+  HelpCircle,
 } from 'lucide-react';
 import { cases } from './data/cases';
 import {
@@ -53,6 +54,8 @@ function getProgress(progressStore: ProgressStore, gameCase: DetectiveCase): Cas
     finalNote: savedProgress.finalNote ?? '',
     unlockedNodeIds: savedProgress.unlockedNodeIds ?? [],
     deductionAnswers: savedProgress.deductionAnswers ?? {},
+    actionPointsSpent: savedProgress.actionPointsSpent ?? 0,
+    initialHypothesisId: savedProgress.initialHypothesisId ?? '',
   };
 }
 
@@ -91,6 +94,10 @@ function NewInvestigationPanel({
   onUnlockNode: (nodeId: string) => void;
 }) {
   const nodes = gameCase.investigationNodes!;
+  const limit = gameCase.actionPointLimit;
+  const spent = progress.actionPointsSpent;
+  const remaining = limit != null ? limit - spent : null;
+  const isExhausted = remaining != null && remaining <= 0;
 
   const visibleNodes = nodes.filter((node) => {
     if (!node.requires || node.requires.length === 0) return true;
@@ -98,41 +105,68 @@ function NewInvestigationPanel({
   });
 
   return (
-    <div className="actions-grid">
-      {visibleNodes.map((node) => {
-        const unlocked = progress.unlockedNodeIds.includes(node.id);
-        return (
-          <div className={`action-card ${unlocked ? 'unlocked' : ''}`} key={node.id}>
-            <div className="action-title" style={{ gap: '0.4rem' }}>
-              <span style={{ color: unlocked ? 'var(--accent-gold)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                {nodeTypeIcon[node.type] ?? <Search size={14} />}
-              </span>
-              {unlocked ? node.title : '未知线索'}
-              {node.requires && node.requires.length > 0 && !unlocked && (
-                <span style={{ fontSize: '0.75rem', color: 'var(--accent-gold)', marginLeft: 'auto' }}>追问</span>
+    <div>
+      {/* 行动点显示 */}
+      {limit != null && (
+        <div className="action-points-bar">
+          <span className="action-points-label">行动点</span>
+          <div className="action-points-pips">
+            {Array.from({ length: limit }).map((_, i) => (
+              <span key={i} className={`pip ${i < spent ? 'used' : ''}`} />
+            ))}
+          </div>
+          <span className={`action-points-remain ${isExhausted ? 'exhausted' : ''}`}>
+            {isExhausted ? '已用尽' : `剩余 ${remaining}`}
+          </span>
+        </div>
+      )}
+
+      <div className="actions-grid">
+        {visibleNodes.map((node) => {
+          const unlocked = progress.unlockedNodeIds.includes(node.id);
+          const canInvestigate = !isExhausted || unlocked;
+          return (
+            <div className={`action-card ${unlocked ? 'unlocked' : ''} ${!canInvestigate ? 'locked-out' : ''}`} key={node.id}>
+              <div className="action-title" style={{ gap: '0.4rem' }}>
+                <span style={{ color: unlocked ? 'var(--accent-gold)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  {nodeTypeIcon[node.type] ?? <Search size={14} />}
+                </span>
+                {unlocked ? node.title : '未知线索'}
+                {node.requires && node.requires.length > 0 && !unlocked && (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--accent-gold)', marginLeft: 'auto' }}>追问</span>
+                )}
+                {!unlocked && node.cost > 1 && (
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                    -{node.cost}点
+                  </span>
+                )}
+              </div>
+
+              {node.prompt && !unlocked && (
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '0.25rem 0 0.5rem 0' }}>{node.prompt}</p>
+              )}
+
+              {unlocked ? (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="action-clue"
+                >
+                  {node.result}
+                </motion.div>
+              ) : canInvestigate ? (
+                <button onClick={() => onUnlockNode(node.id)}>
+                  <Search size={16} /> 调查此处
+                </button>
+              ) : (
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
+                  行动点不足
+                </p>
               )}
             </div>
-
-            {node.prompt && !unlocked && (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '0.25rem 0 0.5rem 0' }}>{node.prompt}</p>
-            )}
-
-            {unlocked ? (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="action-clue"
-              >
-                {node.result}
-              </motion.div>
-            ) : (
-              <button onClick={() => onUnlockNode(node.id)}>
-                <Search size={16} /> 调查此处
-              </button>
-            )}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -289,6 +323,12 @@ function NewReviewPanel({
               ? answers[0] === correct[0]
               : correct.every((c) => answers.includes(c)) && answers.every((a) => correct.includes(a));
 
+        // 检查该步骤所需证据是否已被玩家选择
+        const requiredEvidenceIds = step.requiredEvidenceIds ?? [];
+        const evidenceCovered =
+          requiredEvidenceIds.length === 0 ||
+          requiredEvidenceIds.some((eid) => progress.selectedEvidenceIds.includes(eid));
+
         // 获取选项反馈
         const optionFeedbacks = answers
           .map((a) => feedback.optionFeedback[a])
@@ -302,6 +342,11 @@ function NewReviewPanel({
             </div>
             {optionFeedbacks.length > 0 && (
               <p className="review-step-feedback">{optionFeedbacks[0]}</p>
+            )}
+            {isCorrect && !evidenceCovered && (
+              <p className="review-step-feedback" style={{ color: 'var(--accent-gold)' }}>
+                方向正确，但缺少支撑该推论的关键证据，得分打六折。
+              </p>
             )}
           </div>
         );
@@ -364,6 +409,28 @@ function NewReviewPanel({
           关键证据命中 {keyHits.length} / {evidenceList.filter((e) => e.role === 'key').length} 条
         </p>
       </div>
+
+      {/* 阅卷初判复盘 */}
+      {gameCase.initialHypotheses && progress.initialHypothesisId && (() => {
+        const chosen = gameCase.initialHypotheses!.find((h) => h.id === progress.initialHypothesisId);
+        const conclusionOptionId = (progress.deductionAnswers[conclusionStep.id] ?? [])[0];
+        const conclusionLabel = conclusionStep.options?.find((o) => o.id === conclusionOptionId)?.label ?? '（未填写）';
+        if (!chosen) return null;
+        return (
+          <div className="hypothesis-review">
+            <p className="hypothesis-review-title">阅卷初判 vs 最终结论</p>
+            <div className="hypothesis-review-row">
+              <span className="hypothesis-review-label">阅卷初判：</span>
+              <span className="hypothesis-review-value">{chosen.label}</span>
+            </div>
+            <div className="hypothesis-review-row">
+              <span className="hypothesis-review-label">最终结论：</span>
+              <span className="hypothesis-review-value">{conclusionLabel}</span>
+            </div>
+            <p className="hypothesis-review-feedback">{chosen.feedback}</p>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -412,12 +479,11 @@ export function App() {
     updateCaseProgress(selectedCase.id, (progress) => {
       if (progress.unlockedNodeIds.includes(nodeId)) return progress;
       const node = selectedCase.investigationNodes?.find((n) => n.id === nodeId);
-      // 同时把节点关联的证据加入 selectedEvidenceIds 供展示（不计入断案勾选）
-      const newEvidenceIds = node?.evidenceIds ?? [];
+      const cost = node?.cost ?? 1;
       return {
         ...progress,
         unlockedNodeIds: [...progress.unlockedNodeIds, nodeId],
-        // 将解锁的证据自动加入待选池（不强制勾选，需玩家在断案页手动勾选）
+        actionPointsSpent: progress.actionPointsSpent + cost,
       };
     });
   }
@@ -490,11 +556,11 @@ export function App() {
 
   const completedCount = cases.filter((c) => getProgress(progressStore, c).submitted).length;
 
-  // 断案可提交条件：旧模式需要选真相+2条证据；新模式需要每步都有答案
+  // 断案可提交条件：旧模式需要选真相+2条证据；新模式需要每步都有答案 + 至少选2条证据
   const canSubmit = selectedCase.deductionSteps
     ? selectedCase.deductionSteps.every(
         (step) => (selectedProgress.deductionAnswers[step.id] ?? []).length > 0,
-      )
+      ) && selectedProgress.selectedEvidenceIds.length >= 2
     : Boolean(selectedProgress.selectedTruthId) && selectedProgress.selectedEvidenceIds.length >= 2;
 
   const selectedTruthLabel =
@@ -639,6 +705,32 @@ export function App() {
                         {selectedCase.readerNote}
                       </motion.div>
                     </motion.div>
+
+                    {selectedCase.initialHypotheses && (
+                      <motion.div variants={itemVariants} className="initial-hypothesis-block">
+                        <h4 className="initial-hypothesis-title">
+                          <HelpCircle size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'text-bottom' }} />
+                          阅卷初判：你的第一印象是？
+                        </h4>
+                        <p className="initial-hypothesis-hint">（不计分，仅供结案后复盘对比）</p>
+                        <div className="options-grid">
+                          {selectedCase.initialHypotheses.map((hyp) => {
+                            const selected = selectedProgress.initialHypothesisId === hyp.id;
+                            return (
+                              <button
+                                key={hyp.id}
+                                className={`option-card ${selected ? 'selected' : ''}`}
+                                onClick={() => updateCaseProgress(selectedCase.id, (p) => ({ ...p, initialHypothesisId: hyp.id }))}
+                                disabled={selectedProgress.submitted}
+                              >
+                                <span className="option-indicator" />
+                                {hyp.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
 
                     <div className="stage-footer">
                       <button onClick={() => { setActiveTab('investigation'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
